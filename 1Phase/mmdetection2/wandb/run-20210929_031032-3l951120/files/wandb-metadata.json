@@ -1,0 +1,26 @@
+{
+    "os": "Linux-4.4.0-59-generic-x86_64-with-glibc2.17",
+    "python": "3.8.11",
+    "heartbeatAt": "2021-09-29T03:10:33.730333",
+    "startedAt": "2021-09-29T03:10:32.849503",
+    "docker": null,
+    "gpu": "Tesla V100-PCIE-32GB",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [
+        "/opt/ml/detection/object-detection-level2-cv-03/1Phase/mmdetection/configs/_base_/models/waste_hrnet_32.py"
+    ],
+    "state": "running",
+    "program": "tools/train.py",
+    "codePath": "tools/train.py",
+    "git": {
+        "remote": "https://github.com/open-mmlab/mmdetection.git",
+        "commit": "b0cd4015c2b8bee8ee1069c870f1c4cde41364b3"
+    },
+    "email": null,
+    "root": "/opt/ml/detection/object-detection-level2-cv-03/1Phase/mmdetection",
+    "host": "965f40750ba2",
+    "username": "root",
+    "executable": "/opt/conda/envs/psc/bin/python"
+}
