@@ -5,10 +5,10 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 
-imsize = 800
+imsize = 1024
 
 multi_scale_dict = []
-for i in range(384,imsize+1,32):
+for i in range(412,imsize+1,32):
     multi_scale_dict.append(dict(type='Resize', height=i, width=i))
 '''
 multi_scale_dict = []
@@ -97,7 +97,7 @@ train_pipeline = [
     },
     update_pad_shape=False,
     skip_img_without_anno=True),
-    dict(type='CutOut', n_holes=4, cutout_shape=(30, 30)),
+    # dict(type='CutOut', n_holes=4, cutout_shape=(30, 30)),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),

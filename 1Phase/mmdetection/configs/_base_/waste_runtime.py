@@ -1,4 +1,4 @@
-expr_name = 'hrn_cascade_16_cutout_384_800ms'
+expr_name = 'hrnC_cascade_cutmix_ms4121024_18'
 
 dist_params = dict(backend='nccl')
 
