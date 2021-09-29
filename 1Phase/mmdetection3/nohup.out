@@ -4571,3 +4571,50 @@ Traceback (most recent call last):
 FileNotFoundError: [Errno 2] No such file or directory: '/opt/ml/detection/object-detection-level2-cv-03/1Phase/mmdetection/work_dirs/hrn_cascade_16_cutout_384_800ms/20210929_134323.log.json'
 wandb: Waiting for W&B process to finish, PID 1477
 wandb: Program failed with code 1.  Press ctrl-c to abort syncing.
+Thread SenderThread:
+Traceback (most recent call last):
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/internal/internal_util.py", line 52, in run
+    self._run()
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/internal/internal_util.py", line 102, in _run
+    self._process(record)
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/internal/internal.py", line 290, in _process
+    self._sm.send(record)
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/internal/sender.py", line 187, in send
+    send_handler(record)
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/internal/sender.py", line 298, in send_exit
+    self._update_summary()
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/internal/sender.py", line 776, in _update_summary
+    with open(summary_path, "w") as f:
+FileNotFoundError: [Errno 2] No such file or directory: '/opt/ml/detection/object-detection-level2-cv-03/1Phase/mmdetection/wandb/run-20210929_134332-1hadtheg/files/wandb-summary.json'
+wandb: ERROR Internal wandb error: file data was not synced
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 1583, in _atexit_cleanup
+    self._on_finish()
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 1748, in _on_finish
+    self._poll_exit_response = self._wait_for_finish()
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 1696, in _wait_for_finish
+    poll_exit_resp = self._backend.interface.communicate_poll_exit()
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/interface/interface.py", line 777, in communicate_poll_exit
+    result = self._communicate(rec)
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/interface/interface.py", line 539, in _communicate
+    return self._communicate_async(rec, local=local).get(timeout=timeout)
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/interface/interface.py", line 544, in _communicate_async
+    raise Exception("The wandb backend process has shutdown")
+Exception: The wandb backend process has shutdown
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/wandb_run.py", line 1592, in _atexit_cleanup
+    self._backend.cleanup()
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/backend/backend.py", line 167, in cleanup
+    self.interface.join()
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/interface/interface.py", line 830, in join
+    _ = self._communicate(record)
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/interface/interface.py", line 539, in _communicate
+    return self._communicate_async(rec, local=local).get(timeout=timeout)
+  File "/opt/conda/envs/psc/lib/python3.8/site-packages/wandb/sdk/interface/interface.py", line 544, in _communicate_async
+    raise Exception("The wandb backend process has shutdown")
+Exception: The wandb backend process has shutdown
+
