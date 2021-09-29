@@ -64,7 +64,7 @@ def get_vac(bg, bbox, patience=int(1024*1024*1/100)):
 
 def cutmix2vacant(src, patch, n_append):
     for _ in n_append(n_append):
-
+        
 
 np.bitwise_or
 
