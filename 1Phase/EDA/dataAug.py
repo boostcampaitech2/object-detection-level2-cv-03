@@ -18,8 +18,9 @@ import copy
 imsize = 1024
 margin = 30
 n_class = 10
-dstroot = './aug'
-bboxroot = './bbox'
+# dstroot = './aug'
+dstroot = '/opt/ml/detection/datasetAug/'
+bboxroot = '/opt/ml/detection/datasetAug/bbox'
 
 base = '/opt/ml/detection/dataset'
 train_path = os.path.join(base, 'train_v1.json')
@@ -104,6 +105,12 @@ def cutmix2bg(src_img_id, dst_img_id, fname, ann_id, n_patch):
     src = Image.open(os.path.join(base, img_dic[src_img_id]))
     bg = getbg(src_img_id)
 
+    for ann in annots:
+        if ann['image_id'] == src_img_id:
+            dup_ann = copy.deepcopy(ann)
+            dup_ann['image_id'] = dst_img_id
+            annots.append(dup_ann)
+
     for _ in range(randint(0, n_patch)):
         patch, patch_annot, patch_cls = get_patch()
         coord = get_coord(bg, patch_annot['bbox'])
@@ -123,15 +130,17 @@ def cutmix2bg(src_img_id, dst_img_id, fname, ann_id, n_patch):
             bg[x:x+w, y:y+h] = 1
     if is_patched:
         ##########DST로 바꿔야 함
-        src.save(os.path.join(dstroot, f'{fname}.jpg'))
+        src.save(os.path.join(dstroot, 'train', f'{fname}.jpg'))
     print(is_patched)
     return ann_id, is_patched
 
 def main():
-    n_aug = 10
+    n_aug = 3000
     n_patch_max = 10
     ## json 저장해야함
-    dst_img_id = len(images)
+    dst_img_id = 4883
+    # print(dst_img_id)
+    # exit()
     ann_id = len(annots)
     fname = 5000
     for _ in tqdm(range(n_aug)):

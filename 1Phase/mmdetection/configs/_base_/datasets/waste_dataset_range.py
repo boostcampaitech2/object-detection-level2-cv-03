@@ -5,11 +5,11 @@ img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 
-imsize = 1024
+# imsize = 1024
 
-multi_scale_dict = []
-for i in range(416,imsize+1,32):
-    multi_scale_dict.append(dict(type='Resize', height=i, width=i))
+# multi_scale_dict = []
+# for i in range(416,imsize+1,32):
+#     multi_scale_dict.append(dict(type='Resize', height=i, width=i))
 '''
 multi_scale_dict = []
 for w in range(512,imsize+1,32):
@@ -17,10 +17,10 @@ for w in range(512,imsize+1,32):
         multi_scale_dict.append(dict(type='Resize', height=h, width=w))
 '''
 alb_transform = [
-    dict(
-        type='OneOf',
-        transforms=multi_scale_dict,
-        p=1.0),
+    # dict(
+    #     type='OneOf',
+    #     transforms=multi_scale_dict,
+    #     p=1.0),
     dict(
         type='OneOf',
         transforms=[
@@ -80,8 +80,8 @@ alb_transform = [
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', img_scale=(imsize, imsize)),
-    # dict(type='Resize', img_scale=[(1024, 1024), (1024, 512)]),
+    # dict(type='Resize', img_scale=(imsize, imsize)),
+    dict(type='Resize', img_scale=[(1024, 1024), (512, 512)]),
     dict(
     type='Albu',
     transforms=alb_transform,

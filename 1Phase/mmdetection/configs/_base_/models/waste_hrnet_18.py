@@ -19,5 +19,5 @@ model = dict(
 
 
 data = dict(
-    samples_per_gpu = 16
+    samples_per_gpu = 8
 )
