@@ -2,7 +2,7 @@ _base_ = [
     # '../_base_/datasets/coco_detection.py',
     # '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
     '../../datasets/4VGA_waste_dataset.py',
-    '../../schedules/waste_schedule.py', '../../../waste_runtime_4VGA.py',
+    '../../schedules/waste_schedule.py', '../../waste_runtime_4VGA.py',
 ]
 # model settings
 model = dict(
