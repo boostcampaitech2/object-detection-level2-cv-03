@@ -1,4 +1,5 @@
-expr_name = 'hrnC_Retro_ms4161024_18'
+# expr_name = 'VFNet_ms4161024_101'
+expr_name = 'vfnet_r50_mdconv'
 
 dist_params = dict(backend='nccl')
 

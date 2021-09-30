@@ -98,7 +98,7 @@ train_pipeline = [
     update_pad_shape=False,
     skip_img_without_anno=True),
     # dict(type='CutOut', n_holes=4, cutout_shape=(30, 30)),
-    dict(type='CutOut', n_holes=(0,5), cutout_shape=(32,32)),
+    # dict(type='CutOut', n_holes=(0,5), cutout_shape=(32,32)),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
@@ -123,7 +123,7 @@ test_pipeline = [
 classes = ('General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing')
 
 data = dict(
-    samples_per_gpu=8,
+    samples_per_gpu=16,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,

@@ -1,0 +1,26 @@
+{
+    "os": "Linux-4.4.0-59-generic-x86_64-with-glibc2.17",
+    "python": "3.8.11",
+    "heartbeatAt": "2021-09-30T00:59:43.690158",
+    "startedAt": "2021-09-30T00:59:42.766374",
+    "docker": null,
+    "gpu": "Tesla V100-PCIE-32GB",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [
+        "/opt/ml/detection/object-detection-level2-cv-03/1Phase/mmdetection/configs/_base_/models/waste_VFNet.py"
+    ],
+    "state": "running",
+    "program": "tools/train.py",
+    "codePath": "1Phase/mmdetection/tools/train.py",
+    "git": {
+        "remote": "https://github.com/boostcampaitech2/object-detection-level2-cv-03.git",
+        "commit": "5f46a3b9a844c51462af1626864007f54da1957e"
+    },
+    "email": "ark10806@gmail.com",
+    "root": "/opt/ml/detection/object-detection-level2-cv-03",
+    "host": "965f40750ba2",
+    "username": "root",
+    "executable": "/opt/conda/envs/psc/bin/python"
+}
