@@ -239,7 +239,7 @@ def cutmix2bg(src_img_id, dst_img_id, fname, n_patch_max, n_bg_patch_max, n_mix_
 
 
 def main():
-    n_aug = 5000
+    n_aug = 10000
     n_patch_max = 6
     n_bg_patch_max = 6
     n_mix_patch_max = 2
