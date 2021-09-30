@@ -1,4 +1,4 @@
-_base_ = './waste_vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x.py'
+_base_ = './4VGA_swaste_vfnet_r50_fpn_mdconv_c3-c5_mstrain_2x.py'
 model = dict(
     backbone=dict(
         type='ResNet',
