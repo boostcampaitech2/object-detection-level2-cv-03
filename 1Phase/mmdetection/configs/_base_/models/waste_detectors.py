@@ -3,9 +3,9 @@
 _base_ = [
     '../models/cascade_rcnn_r50_fpn.py',
     # '../_base_/datasets/coco_detection.py',
-    '../datasets/waste_dataset.py',
+    '../datasets/4VGA_waste_dataset.py',
     # '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py',
-    '../schedules/waste_schedule.py', '../waste_runtime.py',
+    '../schedules/waste_schedule.py', '../4VGA_waste_runtime.py',
 ]
 
 model = dict(
