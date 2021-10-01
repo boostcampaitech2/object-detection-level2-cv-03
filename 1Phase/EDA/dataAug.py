@@ -17,10 +17,10 @@ imsize = 1024
 margin = 16
 n_class = 10
 # dstroot = './aug'
-dstroot = '/opt/ml/detection/datasetBGAug/'
-bboxroot = '/opt/ml/detection/datasetBGAug/bbox'
+dstroot = '/opt/ml/detection/datasetMixBGAug/'
+bboxroot = os.path.join(dstroot, 'bbox')
 
-if not os.path.isdir(dstroot):
+if not os.path.isdir(dstroot) or not os.path.isdir(bboxroot):
     os.makedirs(bboxroot)
     os.makedirs(os.path.join(dstroot, 'train'))
     os.makedirs(os.path.join(dstroot, 'test'))
@@ -37,7 +37,7 @@ cls_annots = [[] for _ in range(n_class)]
 for ann in annots:
     cls_annots[ann['category_id']].append(ann)
 
-bg_patient = 7
+bg_patient = 3
 
 def get_cls_panel():
     ann_cnt = Counter()
@@ -71,7 +71,7 @@ def getbg(img_id):
         bg[x:x+w, y:y+h] = 1
     return bg
 
-def get_coord(src_img_id, bbox, is_bg=False, patience=int(1024*1024*1/100)):
+def get_coord(src_img_id, bbox, is_bg=False, patience=int(1024*1024/100)):
     _,_,w,h = bbox
     obj_range = get_range(src_img_id)
     if is_bg:
@@ -95,29 +95,6 @@ def get_coord(src_img_id, bbox, is_bg=False, patience=int(1024*1024*1/100)):
             return [x, y, int(w), int(h)]
     return False
 
-# def get_mix_coord(src_img_id, bbox, is_bg=False, patience=int(1024*1024*1/100)):
-#     _,_,w,h = bbox
-#     obj_range = get_range(src_img_id)
-#     if is_bg:
-#         p_margin = 0
-#     elif imsize-w < margin+30 or imsize-h < margin+30:
-#         return False
-#     else:
-#         p_margin = margin
-
-#     for _ in range(patience):
-#         x, y = randint(p_margin, int(imsize-w) - p_margin), randint(p_margin, int(imsize-h)-p_margin)
-#         is_passed = True
-#         for _x, x_, _y, y_ in obj_range:
-#             if not ((x+w) < _x or x > x_) or ((y+h) < _y or y > y_):
-#                 is_passed = False
-#                 break
-#         if is_passed and not is_bg:
-#             annots_dic[src_img_id].append([x,y,int(w),int(h)])
-#         if is_passed:
-#             return [x, y, int(w), int(h)]
-#     return False
-
 img_dic = {}
 img_ids = []
 for imgj in images:
@@ -136,11 +113,11 @@ def get_range(patch_img_id):
         x,y,w,h = bbox
         obj_range.append((x-margin, x+w+margin, y-margin, y+h+margin))
     return obj_range
-def rand_bg_patch(patience=int(imsize*imsize*10/100)):
-    w,h = int(gauss(200, 100)), int(gauss(200, 100))
+def rand_bg_patch(patience=int(imsize*imsize/100)):
+    w,h = int(gauss(180, 100)), int(gauss(180, 100))
     # w,h = int(gauss(257.50, 204.58)), int(gauss(252.24, 200.14))
     if w < 0 or h < 0:
-        w, h = 200, 200
+        w, h = 180, 180
     patch_img_id = img_ids[randint(0, len(images)-1)]
     obj_range = get_range(patch_img_id)
 
@@ -169,6 +146,71 @@ def get_patch():
     return patch, patch_annot, patch_cls
 
 
+def calc_IoU(box1, box2):
+    x0,y0,x1,y1 = box1
+    a0,b0,a1,b1 = box2
+
+    if (a0 > x0 and b0 > y0) and (a1 < x1 and b1 < y1):
+        AnB = (a1-a0) * (b1-b0)
+        AuB = (x1-x0) * (y1-y0)
+    elif not((x0< a0 < x1) or (x0 < a1 < x1) or (y0 < a0 <y1) or (y0 < a1 <y1)):
+        return 1
+    else:
+        if b0 < y0:
+            if a0 < x0:
+                AnB = (x0-a1) * (y0-b1)
+            else:
+                AnB = (x1-a0) * (y0-b1)
+        else:
+            if a0 < x0:
+                AnB = (x0-a1) * (y1-b0)
+            else:
+                AnB = (x1-a0) * (y1-b0)
+        AnB = abs(AnB)
+        AuB = (x1-x0) * (y1-y0)
+    if AuB <= 0 :
+        return 0
+    else:
+        return AnB / AuB
+
+def get_mix_patch(src_img_id, patient=int(imsize*imsize*10/100)):
+    patch, patch_annot, patch_cls = get_patch()
+
+    x0, y0 = 1024, 1024
+    x1, y1 = 0, 0
+    for x,y,w,h in annots_dic[src_img_id]:
+        if (x0 > x): x0 = x
+        if (y0 > y): y0 = y
+        if (x1 < x): x1 = x + w
+        if (y1 < x): y1 = y + h
+        
+    _,_,w,h = patch_annot['bbox']
+    a0,b0,a1,b1 = 0,0,0,0
+    ov_cnt = 0
+    iou = 0
+    patient_cnt = 0
+    while not ((a0>0 and a1<imsize and b0>0 and b1<imsize) and (0.1 < iou < 0.5) and (ov_cnt == 1) or (patient_cnt >= patient)):
+        if x1+w >= imsize:
+            x1 = imsize-w
+        if y1+h >= imsize:
+            y1 = imsize-h
+        if x1 < x0 or y1 < y0:
+            return False, False, False
+        a0, b0 = randint(int(x0 - w), int(x1)), randint(int(y0 - h), int(y1))
+        a1, b1 = int(a0 + w), int(b0 + h)
+
+        ious = []
+        for x,y,w_t,h_t in annots_dic[src_img_id]:
+            ious.append(calc_IoU([x,y,x+w_t,y+h_t], [a0,b0,a1,b1]))
+        ov_cnt = 0
+        for iou in ious:
+            if (iou != 0): ov_cnt+=1
+        patient_cnt += 1
+    
+    if patient_cnt == patient:
+        return False, False, False
+    else:
+        return patch, [a0, b0, w, h], patch_cls
 
 
 cls_panel = get_cls_panel()
@@ -197,6 +239,22 @@ def cutmix2bg(src_img_id, dst_img_id, fname, n_patch_max, n_bg_patch_max, n_mix_
             if coord:
                 src.paste(bg_patch, coord[:2])
 
+    for _ in range(randint(0, n_mix_patch_max)):
+        patch, coord, patch_cls = get_mix_patch(src_img_id)
+        if coord :
+            is_patched += 1
+            ann_id += 1
+            src.paste(patch, coord[:2])
+            x,y,w,h = coord
+            annots.append({
+                'image_id': dst_img_id,
+                'category_id': patch_cls, 
+                'area': coord[2]*coord[3], 
+                'bbox': [float(x), float(y), float(w), float(h)], 
+                'iscrowd': 0, 
+                'id': ann_id})
+            annots_dic[src_img_id].append(coord)
+
     for _ in range(randint(0, n_patch_max)):
         patch, patch_annot, patch_cls = get_patch()
         coord = get_coord(src_img_id, patch_annot['bbox'])
@@ -214,21 +272,7 @@ def cutmix2bg(src_img_id, dst_img_id, fname, n_patch_max, n_bg_patch_max, n_mix_
                 'id': ann_id})
             # bg[x:x+w, y:y+h] = 1
 
-    # for _ in range(randint(0, n_mix_patch_max)):
-    #     patch, patch_annot, patch_cls = get_patch()
-    #     coord = get_coord(src_img_id, patch_annot['bbox'])
-    #     if coord :
-    #         is_patched += 1
-    #         ann_id += 1
-    #         src.paste(patch, coord[:2])
-    #         x,y,w,h = coord
-    #         annots.append({
-    #             'image_id': dst_img_id,
-    #             'category_id': patch_cls, 
-    #             'area': coord[2]*coord[3], 
-    #             'bbox': [float(x), float(y), float(w), float(h)], 
-    #             'iscrowd': 0, 
-    #             'id': ann_id})
+    
 
     if is_patched:
         src.save(os.path.join(dstroot, 'train', f'{fname}.jpg'))
@@ -240,12 +284,12 @@ def cutmix2bg(src_img_id, dst_img_id, fname, n_patch_max, n_bg_patch_max, n_mix_
 
 def main():
     n_aug = 10000
-    n_patch_max = 6
+    n_patch_max = 4
     n_bg_patch_max = 6
-    n_mix_patch_max = 2
+    n_mix_patch_max = 5
     dst_img_id = 4883
     fname = 5000
-    for _ in tqdm(range(n_aug)):
+    for _ in tqdm(range(n_aug), desc=f'Aug: {len(new_images)}'):
         src_img_id = img_ids[randint(0, len(images)-1)]
         is_patched = cutmix2bg(src_img_id, dst_img_id, fname, n_patch_max, n_bg_patch_max, n_mix_patch_max)
         if is_patched:
@@ -276,7 +320,7 @@ def drawbox(draw, cate, pt1, pt2):
 
 def draw():
     images = new_images
-    for image in tqdm(images):
+    for image in tqdm(images, desc='drawing bbox'):
         img = Image.open(os.path.join(dstroot, image['file_name']))
         draw = ImageDraw.Draw(img)
         for ann in annots:

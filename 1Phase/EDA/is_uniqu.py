@@ -1,7 +1,7 @@
 import json
 from collections import Counter
 
-jf = '/opt/ml/detection/datasetAug/train_aug.json'
+jf = '/opt/ml/detection/object-detection-level2-cv-03/1Phase/EDA/aug/train_aug.json'
 # jf = '/opt/ml/detection/dataset/train.json'
 train_aug = json.load(open(jf))
 annots = train_aug['annotations']

@@ -1,11 +1,12 @@
 dataset_type = 'CocoDataset'
 data_root = '/opt/ml/detection/dataset/'
+data_root = '/opt/ml/detection/Augmented/datasetBGAug/'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 
-imsize = 1024
+imsize = 928 - 32*2
 
 multi_scale_dict = []
 for i in range(416,imsize+1,32):
@@ -109,7 +110,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(512, 512),
+        img_scale=[(i,i) for i in range(416, imsize+1, 32)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -123,7 +124,7 @@ test_pipeline = [
 classes = ('General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing')
 
 data = dict(
-    samples_per_gpu=16,
+    samples_per_gpu=8,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,
