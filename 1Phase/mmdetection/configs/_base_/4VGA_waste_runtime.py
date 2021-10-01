@@ -12,7 +12,7 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='P-stage2-detection',
+                project='P-stage2-detection-Augs',
                 name=expr_name)
         )
     ])
