@@ -6,6 +6,8 @@ img_norm_cfg = dict(
 
 
 # imsize = 1024
+min_size = 512
+max_size = 1024
 
 # multi_scale_dict = []
 # for i in range(416,imsize+1,32):
@@ -81,7 +83,7 @@ train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     # dict(type='Resize', img_scale=(imsize, imsize)),
-    dict(type='Resize', img_scale=[(1024, 1024), (512, 512)]),
+    dict(type='Resize', img_scale=[(min_size, min_size), (max_size, max_size)]),
     dict(
     type='Albu',
     transforms=alb_transform,
@@ -109,7 +111,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(512, 512),
+        img_scale=[(min_size, min_size), (max_size, max_size)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
