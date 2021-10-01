@@ -1,5 +1,6 @@
 # expr_name = 'hrnC_Retro_ms4121024_32'
 expr_name = 'detectors_BGAug1992'
+expr_name = 'swin_BGAug1992'
 
 dist_params = dict(backend='nccl')
 
