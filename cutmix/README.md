@@ -2,7 +2,7 @@
 1. custom_cutmix_aug.py와 augmixations을 mmdetection/mmdet/datasets/pipelines 내부에 저장
 <br>
 <br>
-2. mmdet/datasets/pipelines/__init__.py 내부에 `from .custom_cutmix_aug import CustomCutmix`한 후 \_\_all\_\_ 리스트에 CustomCutmix 추가
+2. mmdet/datasets/pipelines/__init__.py 내부에 from .custom_cutmix_aug import CustomCutmix 한 후 __all__ 리스트에 CustomCutmix 추가
 
 ex)
 ```python3
@@ -14,7 +14,7 @@ __all__ = [
 ```
 <br>
 <br>
-3. pipeline내부에 `CustomCutmix` 추가
+3. pipeline내부에 CustomCutmix 추가
 
 ex)
 ```python3
