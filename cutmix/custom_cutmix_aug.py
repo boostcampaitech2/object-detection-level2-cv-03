@@ -29,16 +29,16 @@ class CustomCutmix:
         ann_file=root+'kfold/cv_train1.json',
         img_prefix=root,
         p=0.5,
-        T=30):
+        T=1):
 
         self.p = p
         self.data_cfg = Config(
             dict(
                 train=dict(
+                    ann_file=ann_file,
                     type=dataset_type,
                     classes=classes,
-                    ann_file=ann_file,
-                    img_prefix=root)))
+                    img_prefix=img_prefix)))
         
         train_pipeline = [
             dict(type='LoadImageFromFile'),
