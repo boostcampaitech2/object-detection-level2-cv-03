@@ -22,13 +22,18 @@ def smooth_l1_loss(pred, target, beta=1.0):
         torch.Tensor: Calculated loss
     """
     assert beta > 0
-    if target.numel() == 0:
+    if target.numel() == 0: # 텐서 내의 원소 개수
         return pred.sum() * 0
 
     assert pred.size() == target.size()
     diff = torch.abs(pred - target)
-    loss = torch.where(diff < beta, 0.5 * diff * diff / beta,
-                       diff - 0.5 * beta)
+    loss = torch.where(diff < beta, 0.5 * diff * diff / beta, diff - 0.5 * beta)
+    '''
+    diff 가 beta=1.0보다 
+        낮으면(오차 적음) -> 0.5 * diff * diff
+        높으면(오차 높음) -> diff - 0.5
+    -> Smoothing 기법이었네
+    '''
     return loss
 
 
