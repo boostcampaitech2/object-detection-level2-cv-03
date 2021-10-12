@@ -1,0 +1,1 @@
+{"train/loss_cls": NaN, "train/loss_bbox": NaN, "train/loss_bbox_rf": NaN, "train/loss": NaN, "train/grad_norm": NaN, "learning_rate": 0.01, "momentum": 0.9, "_runtime": 538, "_timestamp": 1633035835, "_step": 540}

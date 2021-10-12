@@ -1,0 +1,26 @@
+{
+    "os": "Linux-4.4.0-59-generic-x86_64-with-debian-buster-sid",
+    "python": "3.7.11",
+    "heartbeatAt": "2021-09-30T09:57:48.983055",
+    "startedAt": "2021-09-30T09:57:47.986205",
+    "docker": null,
+    "gpu": "Tesla V100-SXM2-32GB",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": null,
+    "args": [
+        "boostcamp/final.py"
+    ],
+    "state": "running",
+    "program": "tools/train.py",
+    "codePath": "tools/train.py",
+    "git": {
+        "remote": "https://github.com/HyelinNAM/mmdetection.git",
+        "commit": "71c30dbd4d138dfbe0621f163b0a965c3c583243"
+    },
+    "email": "larcane@naver.com",
+    "root": "/opt/ml/detection/mmdetection",
+    "host": "2f4df6ced18c",
+    "username": "root",
+    "executable": "/opt/conda/envs/detection/bin/python3"
+}

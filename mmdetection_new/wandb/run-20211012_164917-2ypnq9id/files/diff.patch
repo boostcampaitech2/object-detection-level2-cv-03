@@ -1,0 +1,238 @@
+diff --git a/mmdet/datasets/pipelines/__init__.py b/mmdet/datasets/pipelines/__init__.py
+index 8730527a..981957ed 100644
+--- a/mmdet/datasets/pipelines/__init__.py
++++ b/mmdet/datasets/pipelines/__init__.py
+@@ -14,6 +14,8 @@ from .transforms import (Albu, CutOut, Expand, MinIoURandomCrop, MixUp, Mosaic,
+                          RandomCenterCropPad, RandomCrop, RandomFlip,
+                          RandomShift, Resize, SegRescale)
+ 
++from .custom_cutmix_aug import CustomCutmix
++
+ __all__ = [
+     'Compose', 'to_tensor', 'ToTensor', 'ImageToTensor', 'ToDataContainer',
+     'Transpose', 'Collect', 'DefaultFormatBundle', 'LoadAnnotations',
+@@ -24,5 +26,6 @@ __all__ = [
+     'InstaBoost', 'RandomCenterCropPad', 'AutoAugment', 'CutOut', 'Shear',
+     'Rotate', 'ColorTransform', 'EqualizeTransform', 'BrightnessTransform',
+     'ContrastTransform', 'Translate', 'RandomShift', 'Mosaic', 'MixUp',
+-    'RandomAffine'
++    'RandomAffine',
++    'CustomCutmix'
+ ]
+diff --git a/mmdet/models/dense_heads/__init__.py b/mmdet/models/dense_heads/__init__.py
+index c3440fed..667f0143 100644
+--- a/mmdet/models/dense_heads/__init__.py
++++ b/mmdet/models/dense_heads/__init__.py
+@@ -36,6 +36,8 @@ from .yolo_head import YOLOV3Head
+ from .yolof_head import YOLOFHead
+ from .yolox_head import YOLOXHead
+ 
++from .custom_centernet_head import CustomCenterNetHead
++
+ __all__ = [
+     'AnchorFreeHead', 'AnchorHead', 'GuidedAnchorHead', 'FeatureAdaption',
+     'RPNHead', 'GARPNHead', 'RetinaHead', 'RetinaSepBNHead', 'GARetinaHead',
+@@ -47,5 +49,6 @@ __all__ = [
+     'CascadeRPNHead', 'EmbeddingRPNHead', 'LDHead', 'CascadeRPNHead',
+     'AutoAssignHead', 'DETRHead', 'YOLOFHead', 'DeformableDETRHead',
+     'SOLOHead', 'DecoupledSOLOHead', 'CenterNetHead', 'YOLOXHead',
+-    'DecoupledSOLOLightHead'
++    'DecoupledSOLOLightHead',
++    'CustomCenterNetHead'
+ ]
+diff --git a/mmdet/models/detectors/__init__.py b/mmdet/models/detectors/__init__.py
+index 08fad546..e0857482 100644
+--- a/mmdet/models/detectors/__init__.py
++++ b/mmdet/models/detectors/__init__.py
+@@ -37,6 +37,7 @@ from .yolact import YOLACT
+ from .yolo import YOLOV3
+ from .yolof import YOLOF
+ from .yolox import YOLOX
++from .centernet2 import CenterNet2
+ 
+ __all__ = [
+     'ATSS', 'BaseDetector', 'SingleStageDetector', 'TwoStageDetector', 'RPN',
+@@ -46,5 +47,6 @@ __all__ = [
+     'NASFCOS', 'PointRend', 'GFL', 'CornerNet', 'PAA', 'YOLOV3', 'YOLACT',
+     'VFNet', 'DETR', 'TridentFasterRCNN', 'SparseRCNN', 'SCNet', 'SOLO',
+     'DeformableDETR', 'AutoAssign', 'YOLOF', 'CenterNet', 'YOLOX',
+-    'TwoStagePanopticSegmentor', 'PanopticFPN'
++    'TwoStagePanopticSegmentor', 'PanopticFPN',
++    'CenterNet2'
+ ]
+diff --git a/mmdet/models/losses/__init__.py b/mmdet/models/losses/__init__.py
+index 068a54d6..7d432bda 100644
+--- a/mmdet/models/losses/__init__.py
++++ b/mmdet/models/losses/__init__.py
+@@ -7,6 +7,7 @@ from .cross_entropy_loss import (CrossEntropyLoss, binary_cross_entropy,
+ from .dice_loss import DiceLoss
+ from .focal_loss import FocalLoss, sigmoid_focal_loss
+ from .gaussian_focal_loss import GaussianFocalLoss
++from .gaussian_focal_loss import CustomGaussianFocalLoss
+ from .gfocal_loss import DistributionFocalLoss, QualityFocalLoss
+ from .ghm_loss import GHMC, GHMR
+ from .iou_loss import (BoundedIoULoss, CIoULoss, DIoULoss, GIoULoss, IoULoss,
+@@ -28,5 +29,6 @@ __all__ = [
+     'GHMR', 'reduce_loss', 'weight_reduce_loss', 'weighted_loss', 'L1Loss',
+     'l1_loss', 'isr_p', 'carl_loss', 'AssociativeEmbeddingLoss',
+     'GaussianFocalLoss', 'QualityFocalLoss', 'DistributionFocalLoss',
+-    'VarifocalLoss', 'KnowledgeDistillationKLDivLoss', 'SeesawLoss', 'DiceLoss'
++    'VarifocalLoss', 'KnowledgeDistillationKLDivLoss', 'SeesawLoss', 'DiceLoss',
++    'CustomGaussianFocalLoss'
+ ]
+diff --git a/mmdet/models/losses/gaussian_focal_loss.py b/mmdet/models/losses/gaussian_focal_loss.py
+index 7abcb691..d3504f6c 100644
+--- a/mmdet/models/losses/gaussian_focal_loss.py
++++ b/mmdet/models/losses/gaussian_focal_loss.py
+@@ -1,6 +1,6 @@
+-# Copyright (c) OpenMMLab. All rights reserved.
+ import mmcv
+ import torch.nn as nn
++import torch
+ 
+ from ..builder import LOSSES
+ from .utils import weighted_loss
+@@ -28,6 +28,47 @@ def gaussian_focal_loss(pred, gaussian_target, alpha=2.0, gamma=4.0):
+     neg_loss = -(1 - pred + eps).log() * pred.pow(alpha) * neg_weights
+     return pos_loss + neg_loss
+ 
++@mmcv.jit(derivate=True, coderize=True)
++@weighted_loss
++def custom_gaussian_focal_loss(
++    pred, 
++    gaussian_target,
++    pos_inds = None,
++    alpha: float = -1,
++    beta: float = 4,
++    gamma: float = 2,
++    sigmoid_clamp: float = 1e-4,
++    ignore_high_fp: float = -1.,
++    ):
++    """`Focal Loss <https://arxiv.org/abs/1708.02002>`_ for targets in gaussian
++    distribution.
++
++    Args:
++        pred (torch.Tensor): The prediction.
++        gaussian_target (torch.Tensor): The learning target of the prediction
++            in gaussian distribution.
++        alpha (float, optional): A balanced form for Focal Loss.
++            Defaults to 2.0.
++        gamma (float, optional): The gamma for calculating the modulating
++            factor. Defaults to 4.0.
++    """
++    pred = torch.clamp(pred.sigmoid_(), min=sigmoid_clamp, max=1-sigmoid_clamp)
++    neg_weights = torch.pow(1 - gaussian_target, beta)
++    pos_pred = pred[pos_inds] # N
++    pos_loss = torch.log(pos_pred) * torch.pow(1 - pos_pred, gamma)
++    neg_loss = torch.log(1 - pred) * torch.pow(pred, gamma) * neg_weights
++    if ignore_high_fp > 0:
++        not_high_fp = (pred < ignore_high_fp).float()
++        neg_loss = not_high_fp * neg_loss
++
++    pos_loss = - pos_loss.sum()
++    neg_loss = - neg_loss.sum()
++
++    if alpha >= 0:
++        pos_loss = alpha * pos_loss
++        neg_loss = (1 - alpha) * neg_loss
++
++    return pos_loss + neg_loss
+ 
+ @LOSSES.register_module()
+ class GaussianFocalLoss(nn.Module):
+@@ -90,3 +131,74 @@ class GaussianFocalLoss(nn.Module):
+             reduction=reduction,
+             avg_factor=avg_factor)
+         return loss_reg
++
++@LOSSES.register_module()
++class CustomGaussianFocalLoss(nn.Module):
++    """GaussianFocalLoss is a variant of focal loss.
++
++    More details can be found in the `paper
++    <https://arxiv.org/abs/1808.01244>`_
++    Code is modified from `kp_utils.py
++    <https://github.com/princeton-vl/CornerNet/blob/master/models/py_utils/kp_utils.py#L152>`_  # noqa: E501
++    Please notice that the target in GaussianFocalLoss is a gaussian heatmap,
++    not 0/1 binary target.
++
++    Args:
++        alpha (float): Power of prediction.
++        gamma (float): Power of target for negative samples.
++        reduction (str): Options are "none", "mean" and "sum".
++        loss_weight (float): Loss weight of current loss.
++    """
++
++    def __init__(self,
++                 alpha: float = -1,
++                 beta: float = 4,
++                 gamma: float = 2,
++                 sigmoid_clamp: float = 1e-4,
++                 ignore_high_fp: float = -1.,
++                 reduction='mean',
++                 loss_weight=1.0):
++        super(CustomGaussianFocalLoss, self).__init__()
++        self.alpha = alpha
++        self.beta = beta
++        self.gamma = gamma
++        self.sigmoid_clmap = sigmoid_clamp
++        self.ignore_high_fp = ignore_high_fp
++        self.reduction = reduction
++        self.loss_weight = loss_weight
++
++    def forward(self,
++                pred,
++                target,
++                pos_inds,
++                weight=None,
++                avg_factor=None,
++                reduction_override=None):
++        """Forward function.
++
++        Args:
++            pred (torch.Tensor): The prediction.
++            target (torch.Tensor): The learning target of the prediction
++                in gaussian distribution.
++            weight (torch.Tensor, optional): The weight of loss for each
++                prediction. Defaults to None.
++            avg_factor (int, optional): Average factor that is used to average
++                the loss. Defaults to None.
++            reduction_override (str, optional): The reduction method used to
++                override the original reduction method of the loss.
++                Defaults to None.
++        """
++        assert reduction_override in (None, 'none', 'mean', 'sum')
++        reduction = (
++            reduction_override if reduction_override else self.reduction)
++        loss_reg = self.loss_weight * custom_gaussian_focal_loss(
++            pred,
++            target,
++            weight,
++            pos_inds=pos_inds,
++            alpha=self.alpha,
++            gamma=self.gamma,
++            ignore_high_fp=self.ignore_high_fp,
++            reduction=reduction,
++            avg_factor=avg_factor)
++        return loss_reg
+\ No newline at end of file
+diff --git a/mmdet/models/roi_heads/__init__.py b/mmdet/models/roi_heads/__init__.py
+index baae2a05..da4677ee 100644
+--- a/mmdet/models/roi_heads/__init__.py
++++ b/mmdet/models/roi_heads/__init__.py
+@@ -22,6 +22,7 @@ from .shared_heads import ResLayer
+ from .sparse_roi_head import SparseRoIHead
+ from .standard_roi_head import StandardRoIHead
+ from .trident_roi_head import TridentRoIHead
++from .custom_cascade_roi_head import CustomCascadeRoIHead
+ 
+ __all__ = [
+     'BaseRoIHead', 'CascadeRoIHead', 'DoubleHeadRoIHead', 'MaskScoringRoIHead',
+@@ -33,5 +34,6 @@ __all__ = [
+     'SingleRoIExtractor', 'PISARoIHead', 'PointRendRoIHead', 'MaskPointHead',
+     'CoarseMaskHead', 'DynamicRoIHead', 'SparseRoIHead', 'TridentRoIHead',
+     'SCNetRoIHead', 'SCNetMaskHead', 'SCNetSemanticHead', 'SCNetBBoxHead',
+-    'FeatureRelayHead', 'GlobalContextHead'
++    'FeatureRelayHead', 'GlobalContextHead',
++    'CustomCascadeRoIHead'
+ ]

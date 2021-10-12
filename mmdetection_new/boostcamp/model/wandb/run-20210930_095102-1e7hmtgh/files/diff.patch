@@ -1,0 +1,2149 @@
+diff --git a/configs/boostcamp_trash/dataset.py b/configs/boostcamp_trash/dataset.py
+deleted file mode 100644
+index b06aa32b..00000000
+--- a/configs/boostcamp_trash/dataset.py
++++ /dev/null
+@@ -1,51 +0,0 @@
+-# dataset settings
+-dataset_type = 'CocoDataset'
+-data_root = '/home/data/data/'
+-
+-img_norm_cfg = dict(
+-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+-train_pipeline = [
+-    dict(type='LoadImageFromFile'),
+-    dict(type='LoadAnnotations', with_bbox=True),
+-    dict(type='Resize', img_scale=(512, 512), keep_ratio=True),
+-    dict(type='RandomFlip', flip_ratio=0.5),
+-    dict(type='Normalize', **img_norm_cfg),
+-    dict(type='DefaultFormatBundle'),
+-    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
+-]
+-test_pipeline = [
+-    dict(type='LoadImageFromFile'),
+-    dict(
+-        type='MultiScaleFlipAug',
+-        img_scale=(512, 512),
+-        flip=False,
+-        transforms=[
+-            dict(type='Resize', keep_ratio=True),
+-            dict(type='RandomFlip'),
+-            dict(type='Normalize', **img_norm_cfg),
+-            dict(type='ImageToTensor', keys=['img']),
+-            dict(type='Collect', keys=['img']),
+-        ])
+-]
+-
+-classes = ("UNKNOWN", "General trash", "Paper", "Paper pack", "Metal", "Glass",
+-           "Plastic", "Styrofoam", "Plastic bag", "Battery", "Clothing")
+-
+-data = dict(
+-    samples_per_gpu=4,
+-    workers_per_gpu=2,
+-    train=dict(
+-        type=dataset_type,
+-        ann_file=data_root + 'train.json',
+-        img_prefix=data_root,
+-        pipeline=train_pipeline),
+-    val=dict(
+-        type=dataset_type,
+-        ann_file=data_root + 'val.json',
+-        img_prefix=data_root,
+-        pipeline=test_pipeline),
+-    test=dict(
+-        type=dataset_type,
+-        ann_file=data_root + 'test.json',
+-        img_prefix=data_root,
+-        pipeline=test_pipeline))
+diff --git a/configs/boostcamp_trash/trash/faster_rcnn_r50_fpn_1x_trash.py b/configs/boostcamp_trash/trash/faster_rcnn_r50_fpn_1x_trash.py
+deleted file mode 100644
+index de17256a..00000000
+--- a/configs/boostcamp_trash/trash/faster_rcnn_r50_fpn_1x_trash.py
++++ /dev/null
+@@ -1,19 +0,0 @@
+-_base_ = [
+-    '../../_base_/models/faster_rcnn_r50_fpn.py',
+-    '../dataset.py',
+-    '../../_base_/schedules/schedule_1x.py',
+-    '../../_base_/default_runtime.py'
+-]
+-
+-model = dict(
+-    roi_head=dict(
+-        bbox_head=dict(
+-            num_classes=11
+-        )
+-    )
+-)
+-
+-optimizer_config = dict(
+-    _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
+-
+-checkpoint_config = dict(max_keep_ckpts=3, interval=1)
+\ No newline at end of file
+diff --git a/faster_rcnn_inference.ipynb b/faster_rcnn_inference.ipynb
+index 65594715..99712305 100644
+--- a/faster_rcnn_inference.ipynb
++++ b/faster_rcnn_inference.ipynb
+@@ -2,7 +2,7 @@
+  "cells": [
+   {
+    "cell_type": "code",
+-   "execution_count": 2,
++   "execution_count": 1,
+    "id": "3fd75793",
+    "metadata": {},
+    "outputs": [],
+@@ -24,18 +24,18 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 3,
++   "execution_count": 2,
+    "id": "edda58ea",
+    "metadata": {},
+    "outputs": [],
+    "source": [
+-    "classes = (\"UNKNOWN\", \"General trash\", \"Paper\", \"Paper pack\", \"Metal\", \"Glass\", \n",
++    "classes = (\"General trash\", \"Paper\", \"Paper pack\", \"Metal\", \"Glass\", \n",
+     "           \"Plastic\", \"Styrofoam\", \"Plastic bag\", \"Battery\", \"Clothing\")\n",
+     "\n",
+     "# config file 들고오기\n",
+     "cfg = Config.fromfile('./configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py')\n",
+     "\n",
+-    "root='/home/data/data/'\n",
++    "root='../dataset/'\n",
+     "\n",
+     "epoch = 'latest'\n",
+     "\n",
+@@ -44,48 +44,61 @@
+     "cfg.data.test.img_prefix = root\n",
+     "cfg.data.test.ann_file = root + 'test.json'\n",
+     "cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize\n",
++    "cfg.data.test.test_mode = True\n",
+     "\n",
+     "cfg.data.samples_per_gpu = 4\n",
+     "\n",
+-    "cfg.seed=2020\n",
+-    "cfg.gpu_ids = [0]\n",
++    "cfg.seed=2021\n",
++    "cfg.gpu_ids = [1]\n",
+     "cfg.work_dir = './work_dirs/faster_rcnn_r50_fpn_1x_trash'\n",
+     "\n",
+-    "cfg.model.roi_head.bbox_head.num_classes = 11\n",
++    "cfg.model.roi_head.bbox_head.num_classes = 10\n",
+     "\n",
+     "cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)\n",
+-    "cfg.model.train_cfg = None\n",
+-    "\n",
+-    "# checkpoint path\n",
+-    "checkpoint_path = os.path.join(cfg.work_dir, f'{epoch}.pth')"
++    "cfg.model.train_cfg = None"
+    ]
+   },
+   {
+    "cell_type": "code",
+    "execution_count": 4,
+-   "id": "b086a8cf",
++   "id": "dbca129c",
+    "metadata": {},
+    "outputs": [
+     {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "loading annotations into memory...\n",
+-      "Done (t=0.01s)\n",
+-      "creating index...\n",
+-      "index created!\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "/home/hyelin/mmdetection/mmdet/datasets/api_wrappers/coco_api.py:21: UserWarning: mmpycocotools is deprecated. Please install official pycocotools by \"pip install pycocotools\"\n",
+-      "  UserWarning)\n"
+-     ]
++     "data": {
++      "text/plain": [
++       "[{'type': 'LoadImageFromFile'},\n",
++       " {'type': 'MultiScaleFlipAug',\n",
++       "  'img_scale': (512, 512),\n",
++       "  'flip': False,\n",
++       "  'transforms': [{'type': 'Resize', 'keep_ratio': True},\n",
++       "   {'type': 'RandomFlip'},\n",
++       "   {'type': 'Normalize',\n",
++       "    'mean': [123.675, 116.28, 103.53],\n",
++       "    'std': [58.395, 57.12, 57.375],\n",
++       "    'to_rgb': True},\n",
++       "   {'type': 'Pad', 'size_divisor': 32},\n",
++       "   {'type': 'ImageToTensor', 'keys': ['img']},\n",
++       "   {'type': 'Collect', 'keys': ['img']}]}]"
++      ]
++     },
++     "execution_count": 4,
++     "metadata": {},
++     "output_type": "execute_result"
+     }
+    ],
+    "source": [
++    "cfg.data.test.pipeline"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": null,
++   "id": "b086a8cf",
++   "metadata": {},
++   "outputs": [],
++   "source": [
++    "# build dataset & dataloader\n",
+     "dataset = build_dataset(cfg.data.test)\n",
+     "data_loader = build_dataloader(\n",
+     "        dataset,\n",
+@@ -97,21 +110,16 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 6,
++   "execution_count": null,
+    "id": "83b3eae6",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Use load_from_local loader\n"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+-    "model = build_detector(cfg.model, test_cfg=cfg.get('test_cfg'))\n",
+-    "checkpoint = load_checkpoint(model, checkpoint_path, map_location='cpu')\n",
++    "# checkpoint path\n",
++    "checkpoint_path = os.path.join(cfg.work_dir, f'{epoch}.pth')\n",
++    "\n",
++    "model = build_detector(cfg.model, test_cfg=cfg.get('test_cfg')) # build detector\n",
++    "checkpoint = load_checkpoint(model, checkpoint_path, map_location='cpu') # ckpt load\n",
+     "\n",
+     "model.CLASSES = dataset.CLASSES\n",
+     "model = MMDataParallel(model.cuda(), device_ids=[0])"
+@@ -119,131 +127,28 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 7,
++   "execution_count": null,
+    "id": "c9f5c2bb",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[                                 ] 2/837, 2.0 task/s, elapsed: 1s, ETA:   412s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "/home/hyelin/mmdetection/mmdet/core/anchor/anchor_generator.py:323: UserWarning: ``grid_anchors`` would be deprecated soon. Please use ``grid_priors`` \n",
+-      "  warnings.warn('``grid_anchors`` would be deprecated soon. '\n",
+-      "/home/hyelin/mmdetection/mmdet/core/anchor/anchor_generator.py:360: UserWarning: ``single_level_grid_anchors`` would be deprecated soon. Please use ``single_level_grid_priors`` \n",
+-      "  '``single_level_grid_anchors`` would be deprecated soon. '\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 837/837, 31.4 task/s, elapsed: 27s, ETA:     0s"
+-     ]
+-    }
+-   ],
++   "outputs": [],
+    "source": [
+-    "output = single_gpu_test(model, data_loader, show_score_thr=0.05)"
++    "output = single_gpu_test(model, data_loader, show_score_thr=0.05) # output 계산"
+    ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 8,
++   "execution_count": null,
+    "id": "5672a0ff",
+    "metadata": {},
+-   "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "loading annotations into memory...\n",
+-      "Done (t=0.01s)\n",
+-      "creating index...\n",
+-      "index created!\n"
+-     ]
+-    },
+-    {
+-     "data": {
+-      "text/html": [
+-       "<div>\n",
+-       "<style scoped>\n",
+-       "    .dataframe tbody tr th:only-of-type {\n",
+-       "        vertical-align: middle;\n",
+-       "    }\n",
+-       "\n",
+-       "    .dataframe tbody tr th {\n",
+-       "        vertical-align: top;\n",
+-       "    }\n",
+-       "\n",
+-       "    .dataframe thead th {\n",
+-       "        text-align: right;\n",
+-       "    }\n",
+-       "</style>\n",
+-       "<table border=\"1\" class=\"dataframe\">\n",
+-       "  <thead>\n",
+-       "    <tr style=\"text-align: right;\">\n",
+-       "      <th></th>\n",
+-       "      <th>PredictionString</th>\n",
+-       "      <th>image_id</th>\n",
+-       "    </tr>\n",
+-       "  </thead>\n",
+-       "  <tbody>\n",
+-       "    <tr>\n",
+-       "      <th>0</th>\n",
+-       "      <td>1 0.13906147 400.45792 396.2644 433.47427 416....</td>\n",
+-       "      <td>batch_01_vt/0021.jpg</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>1</th>\n",
+-       "      <td>2 0.28541917 86.7869 19.328773 180.50931 221.5...</td>\n",
+-       "      <td>batch_01_vt/0028.jpg</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>2</th>\n",
+-       "      <td>1 0.20373663 234.55782 458.92645 304.07123 511...</td>\n",
+-       "      <td>batch_01_vt/0031.jpg</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>3</th>\n",
+-       "      <td>1 0.067051776 341.9012 108.89167 377.85495 167...</td>\n",
+-       "      <td>batch_01_vt/0032.jpg</td>\n",
+-       "    </tr>\n",
+-       "    <tr>\n",
+-       "      <th>4</th>\n",
+-       "      <td>1 0.097199455 155.30357 339.61398 384.83374 48...</td>\n",
+-       "      <td>batch_01_vt/0070.jpg</td>\n",
+-       "    </tr>\n",
+-       "  </tbody>\n",
+-       "</table>\n",
+-       "</div>"
+-      ],
+-      "text/plain": [
+-       "                                    PredictionString              image_id\n",
+-       "0  1 0.13906147 400.45792 396.2644 433.47427 416....  batch_01_vt/0021.jpg\n",
+-       "1  2 0.28541917 86.7869 19.328773 180.50931 221.5...  batch_01_vt/0028.jpg\n",
+-       "2  1 0.20373663 234.55782 458.92645 304.07123 511...  batch_01_vt/0031.jpg\n",
+-       "3  1 0.067051776 341.9012 108.89167 377.85495 167...  batch_01_vt/0032.jpg\n",
+-       "4  1 0.097199455 155.30357 339.61398 384.83374 48...  batch_01_vt/0070.jpg"
+-      ]
+-     },
+-     "execution_count": 8,
+-     "metadata": {},
+-     "output_type": "execute_result"
+-    }
+-   ],
++   "outputs": [],
+    "source": [
++    "# submission 양식에 맞게 output 후처리\n",
+     "prediction_strings = []\n",
+     "file_names = []\n",
+     "coco = COCO(cfg.data.test.ann_file)\n",
+-    "imag_ids = coco.getImgIds()\n",
++    "img_ids = coco.getImgIds()\n",
+     "\n",
+-    "class_num = 11\n",
++    "class_num = 10\n",
+     "for i, out in enumerate(output):\n",
+     "    prediction_string = ''\n",
+     "    image_info = coco.loadImgs(coco.getImgIds(imgIds=i))[0]\n",
+diff --git a/faster_rcnn_train.ipynb b/faster_rcnn_train.ipynb
+index 21039b1f..6d0f8576 100644
+--- a/faster_rcnn_train.ipynb
++++ b/faster_rcnn_train.ipynb
+@@ -2,10 +2,12 @@
+  "cells": [
+   {
+    "cell_type": "code",
+-   "execution_count": 1,
++   "execution_count": 7,
+    "metadata": {},
+    "outputs": [],
+    "source": [
++    "# 모듈 import\n",
++    "\n",
+     "from mmcv import Config\n",
+     "from mmdet.datasets import build_dataset\n",
+     "from mmdet.models import build_detector\n",
+@@ -16,137 +18,926 @@
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 2,
++   "execution_count": 8,
+    "metadata": {},
+    "outputs": [],
+    "source": [
+-    "classes = (\"UNKNOWN\", \"General trash\", \"Paper\", \"Paper pack\", \"Metal\", \"Glass\", \n",
++    "classes = (\"General trash\", \"Paper\", \"Paper pack\", \"Metal\", \"Glass\", \n",
+     "           \"Plastic\", \"Styrofoam\", \"Plastic bag\", \"Battery\", \"Clothing\")\n",
+     "\n",
+     "# config file 들고오기\n",
+     "cfg = Config.fromfile('./configs/faster_rcnn/faster_rcnn_r50_fpn_1x_coco.py')\n",
+     "\n",
+-    "root='/home/data/data/'\n",
++    "root='../dataset/'\n",
+     "\n",
+     "# dataset config 수정\n",
+     "cfg.data.train.classes = classes\n",
+     "cfg.data.train.img_prefix = root\n",
+-    "cfg.data.train.ann_file = root + 'train.json'\n",
++    "cfg.data.train.ann_file = root + 'train.json' # train json 정보\n",
+     "cfg.data.train.pipeline[2]['img_scale'] = (512,512) # Resize\n",
+     "\n",
+-    "cfg.data.val.classes = classes\n",
+-    "cfg.data.val.img_prefix = root\n",
+-    "cfg.data.val.ann_file = root + 'val.json'\n",
+-    "cfg.data.val.pipeline[1]['img_scale'] = (512,512) # Resize\n",
+-    "\n",
+     "cfg.data.test.classes = classes\n",
+     "cfg.data.test.img_prefix = root\n",
+-    "cfg.data.test.ann_file = root + 'test.json'\n",
++    "cfg.data.test.ann_file = root + 'test.json' # test json 정보\n",
+     "cfg.data.test.pipeline[1]['img_scale'] = (512,512) # Resize\n",
+     "\n",
+     "cfg.data.samples_per_gpu = 4\n",
+     "\n",
+-    "cfg.seed = 2020\n",
++    "cfg.seed = 2021\n",
+     "cfg.gpu_ids = [0]\n",
+     "cfg.work_dir = './work_dirs/faster_rcnn_r50_fpn_1x_trash'\n",
+     "\n",
+-    "cfg.model.roi_head.bbox_head.num_classes = 11\n",
++    "cfg.model.roi_head.bbox_head.num_classes = 10\n",
+     "\n",
+-    "cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)"
++    "cfg.optimizer_config.grad_clip = dict(max_norm=35, norm_type=2)\n",
++    "cfg.checkpoint_config = dict(max_keep_ckpts=3, interval=1)"
+    ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 3,
++   "execution_count": 9,
+    "metadata": {},
+    "outputs": [
+     {
+-     "name": "stderr",
++     "name": "stdout",
+      "output_type": "stream",
+      "text": [
+-      "/home/hyelin/mmdetection/mmdet/core/anchor/builder.py:16: UserWarning: ``build_anchor_generator`` would be deprecated soon, please use ``build_prior_generator`` \n",
+-      "  '``build_anchor_generator`` would be deprecated soon, please use '\n"
++      "loading annotations into memory...\n",
++      "Done (t=0.22s)\n",
++      "creating index...\n",
++      "index created!\n"
+      ]
+     }
+    ],
+    "source": [
+-    "model = build_detector(cfg.model)"
++    "# build_dataset\n",
++    "datasets = [build_dataset(cfg.data.train)]"
+    ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 4,
++   "execution_count": 10,
++   "metadata": {},
++   "outputs": [
++    {
++     "data": {
++      "text/plain": [
++       "\n",
++       "CocoDataset Train dataset with number of images 4883, and instance counts: \n",
++       "+-------------------+-------+---------------+-------+-----------------+-------+-------------+-------+--------------+-------+\n",
++       "| category          | count | category      | count | category        | count | category    | count | category     | count |\n",
++       "+-------------------+-------+---------------+-------+-----------------+-------+-------------+-------+--------------+-------+\n",
++       "| 0 [General trash] | 3965  | 1 [Paper]     | 6352  | 2 [Paper pack]  | 897   | 3 [Metal]   | 936   | 4 [Glass]    | 982   |\n",
++       "| 5 [Plastic]       | 2943  | 6 [Styrofoam] | 1263  | 7 [Plastic bag] | 5178  | 8 [Battery] | 159   | 9 [Clothing] | 468   |\n",
++       "+-------------------+-------+---------------+-------+-----------------+-------+-------------+-------+--------------+-------+"
++      ]
++     },
++     "execution_count": 10,
++     "metadata": {},
++     "output_type": "execute_result"
++    }
++   ],
++   "source": [
++    "# dataset 확인\n",
++    "datasets[0]"
++   ]
++  },
++  {
++   "cell_type": "code",
++   "execution_count": 11,
+    "metadata": {},
+    "outputs": [
+     {
+      "name": "stderr",
+      "output_type": "stream",
+      "text": [
+-      "/home/hyelin/mmdetection/mmdet/datasets/api_wrappers/coco_api.py:21: UserWarning: mmpycocotools is deprecated. Please install official pycocotools by \"pip install pycocotools\"\n",
+-      "  UserWarning)\n"
++      "2021-09-16 14:34:38,212 - mmcv - INFO - initialize ResNet with init_cfg {'type': 'Pretrained', 'checkpoint': 'torchvision://resnet50'}\n",
++      "2021-09-16 14:34:38,213 - mmcv - INFO - load model from: torchvision://resnet50\n",
++      "2021-09-16 14:34:38,213 - mmcv - INFO - Use load_from_torchvision loader\n",
++      "2021-09-16 14:34:38,429 - mmcv - WARNING - The model and loaded state dict do not match exactly\n",
++      "\n",
++      "unexpected key in source state_dict: fc.weight, fc.bias\n",
++      "\n",
++      "2021-09-16 14:34:38,453 - mmcv - INFO - initialize FPN with init_cfg {'type': 'Xavier', 'layer': 'Conv2d', 'distribution': 'uniform'}\n",
++      "2021-09-16 14:34:38,480 - mmcv - INFO - initialize RPNHead with init_cfg {'type': 'Normal', 'layer': 'Conv2d', 'std': 0.01}\n",
++      "2021-09-16 14:34:38,489 - mmcv - INFO - initialize Shared2FCBBoxHead with init_cfg [{'type': 'Normal', 'std': 0.01, 'override': {'name': 'fc_cls'}}, {'type': 'Normal', 'std': 0.001, 'override': {'name': 'fc_reg'}}, {'type': 'Xavier', 'layer': 'Linear', 'override': [{'name': 'shared_fcs'}, {'name': 'cls_fcs'}, {'name': 'reg_fcs'}]}]\n",
++      "2021-09-16 14:34:38,812 - mmcv - INFO - \n",
++      "backbone.conv1.weight - torch.Size([64, 3, 7, 7]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,813 - mmcv - INFO - \n",
++      "backbone.bn1.weight - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,813 - mmcv - INFO - \n",
++      "backbone.bn1.bias - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,814 - mmcv - INFO - \n",
++      "backbone.layer1.0.conv1.weight - torch.Size([64, 64, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,814 - mmcv - INFO - \n",
++      "backbone.layer1.0.bn1.weight - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,815 - mmcv - INFO - \n",
++      "backbone.layer1.0.bn1.bias - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,816 - mmcv - INFO - \n",
++      "backbone.layer1.0.conv2.weight - torch.Size([64, 64, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,816 - mmcv - INFO - \n",
++      "backbone.layer1.0.bn2.weight - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,817 - mmcv - INFO - \n",
++      "backbone.layer1.0.bn2.bias - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,818 - mmcv - INFO - \n",
++      "backbone.layer1.0.conv3.weight - torch.Size([256, 64, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,818 - mmcv - INFO - \n",
++      "backbone.layer1.0.bn3.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,819 - mmcv - INFO - \n",
++      "backbone.layer1.0.bn3.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,819 - mmcv - INFO - \n",
++      "backbone.layer1.0.downsample.0.weight - torch.Size([256, 64, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,820 - mmcv - INFO - \n",
++      "backbone.layer1.0.downsample.1.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,821 - mmcv - INFO - \n",
++      "backbone.layer1.0.downsample.1.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,821 - mmcv - INFO - \n",
++      "backbone.layer1.1.conv1.weight - torch.Size([64, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,822 - mmcv - INFO - \n",
++      "backbone.layer1.1.bn1.weight - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,823 - mmcv - INFO - \n",
++      "backbone.layer1.1.bn1.bias - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,823 - mmcv - INFO - \n",
++      "backbone.layer1.1.conv2.weight - torch.Size([64, 64, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,824 - mmcv - INFO - \n",
++      "backbone.layer1.1.bn2.weight - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,825 - mmcv - INFO - \n",
++      "backbone.layer1.1.bn2.bias - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,826 - mmcv - INFO - \n",
++      "backbone.layer1.1.conv3.weight - torch.Size([256, 64, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,826 - mmcv - INFO - \n",
++      "backbone.layer1.1.bn3.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,827 - mmcv - INFO - \n",
++      "backbone.layer1.1.bn3.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,827 - mmcv - INFO - \n",
++      "backbone.layer1.2.conv1.weight - torch.Size([64, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,828 - mmcv - INFO - \n",
++      "backbone.layer1.2.bn1.weight - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,829 - mmcv - INFO - \n",
++      "backbone.layer1.2.bn1.bias - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,829 - mmcv - INFO - \n",
++      "backbone.layer1.2.conv2.weight - torch.Size([64, 64, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,830 - mmcv - INFO - \n",
++      "backbone.layer1.2.bn2.weight - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,830 - mmcv - INFO - \n",
++      "backbone.layer1.2.bn2.bias - torch.Size([64]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,831 - mmcv - INFO - \n",
++      "backbone.layer1.2.conv3.weight - torch.Size([256, 64, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,831 - mmcv - INFO - \n",
++      "backbone.layer1.2.bn3.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,832 - mmcv - INFO - \n",
++      "backbone.layer1.2.bn3.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,832 - mmcv - INFO - \n",
++      "backbone.layer2.0.conv1.weight - torch.Size([128, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,833 - mmcv - INFO - \n",
++      "backbone.layer2.0.bn1.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,834 - mmcv - INFO - \n",
++      "backbone.layer2.0.bn1.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,834 - mmcv - INFO - \n",
++      "backbone.layer2.0.conv2.weight - torch.Size([128, 128, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,835 - mmcv - INFO - \n",
++      "backbone.layer2.0.bn2.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,835 - mmcv - INFO - \n",
++      "backbone.layer2.0.bn2.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,835 - mmcv - INFO - \n",
++      "backbone.layer2.0.conv3.weight - torch.Size([512, 128, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,836 - mmcv - INFO - \n",
++      "backbone.layer2.0.bn3.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,837 - mmcv - INFO - \n",
++      "backbone.layer2.0.bn3.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,838 - mmcv - INFO - \n",
++      "backbone.layer2.0.downsample.0.weight - torch.Size([512, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,839 - mmcv - INFO - \n",
++      "backbone.layer2.0.downsample.1.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,839 - mmcv - INFO - \n",
++      "backbone.layer2.0.downsample.1.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,841 - mmcv - INFO - \n",
++      "backbone.layer2.1.conv1.weight - torch.Size([128, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,841 - mmcv - INFO - \n",
++      "backbone.layer2.1.bn1.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,843 - mmcv - INFO - \n",
++      "backbone.layer2.1.bn1.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,843 - mmcv - INFO - \n",
++      "backbone.layer2.1.conv2.weight - torch.Size([128, 128, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n"
+      ]
+     },
+     {
+-     "name": "stdout",
++     "name": "stderr",
+      "output_type": "stream",
+      "text": [
+-      "loading annotations into memory...\n",
+-      "Done (t=3.94s)\n",
+-      "creating index...\n",
+-      "index created!\n"
++      "2021-09-16 14:34:38,844 - mmcv - INFO - \n",
++      "backbone.layer2.1.bn2.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,845 - mmcv - INFO - \n",
++      "backbone.layer2.1.bn2.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,845 - mmcv - INFO - \n",
++      "backbone.layer2.1.conv3.weight - torch.Size([512, 128, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,846 - mmcv - INFO - \n",
++      "backbone.layer2.1.bn3.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,847 - mmcv - INFO - \n",
++      "backbone.layer2.1.bn3.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,847 - mmcv - INFO - \n",
++      "backbone.layer2.2.conv1.weight - torch.Size([128, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,848 - mmcv - INFO - \n",
++      "backbone.layer2.2.bn1.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,849 - mmcv - INFO - \n",
++      "backbone.layer2.2.bn1.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,851 - mmcv - INFO - \n",
++      "backbone.layer2.2.conv2.weight - torch.Size([128, 128, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,852 - mmcv - INFO - \n",
++      "backbone.layer2.2.bn2.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,853 - mmcv - INFO - \n",
++      "backbone.layer2.2.bn2.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,854 - mmcv - INFO - \n",
++      "backbone.layer2.2.conv3.weight - torch.Size([512, 128, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,854 - mmcv - INFO - \n",
++      "backbone.layer2.2.bn3.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,855 - mmcv - INFO - \n",
++      "backbone.layer2.2.bn3.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,856 - mmcv - INFO - \n",
++      "backbone.layer2.3.conv1.weight - torch.Size([128, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,857 - mmcv - INFO - \n",
++      "backbone.layer2.3.bn1.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,858 - mmcv - INFO - \n",
++      "backbone.layer2.3.bn1.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,859 - mmcv - INFO - \n",
++      "backbone.layer2.3.conv2.weight - torch.Size([128, 128, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,860 - mmcv - INFO - \n",
++      "backbone.layer2.3.bn2.weight - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,861 - mmcv - INFO - \n",
++      "backbone.layer2.3.bn2.bias - torch.Size([128]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,862 - mmcv - INFO - \n",
++      "backbone.layer2.3.conv3.weight - torch.Size([512, 128, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,863 - mmcv - INFO - \n",
++      "backbone.layer2.3.bn3.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,864 - mmcv - INFO - \n",
++      "backbone.layer2.3.bn3.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,865 - mmcv - INFO - \n",
++      "backbone.layer3.0.conv1.weight - torch.Size([256, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,866 - mmcv - INFO - \n",
++      "backbone.layer3.0.bn1.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,866 - mmcv - INFO - \n",
++      "backbone.layer3.0.bn1.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,867 - mmcv - INFO - \n",
++      "backbone.layer3.0.conv2.weight - torch.Size([256, 256, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,868 - mmcv - INFO - \n",
++      "backbone.layer3.0.bn2.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,869 - mmcv - INFO - \n",
++      "backbone.layer3.0.bn2.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,870 - mmcv - INFO - \n",
++      "backbone.layer3.0.conv3.weight - torch.Size([1024, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,871 - mmcv - INFO - \n",
++      "backbone.layer3.0.bn3.weight - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,872 - mmcv - INFO - \n",
++      "backbone.layer3.0.bn3.bias - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,873 - mmcv - INFO - \n",
++      "backbone.layer3.0.downsample.0.weight - torch.Size([1024, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,873 - mmcv - INFO - \n",
++      "backbone.layer3.0.downsample.1.weight - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,874 - mmcv - INFO - \n",
++      "backbone.layer3.0.downsample.1.bias - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,875 - mmcv - INFO - \n",
++      "backbone.layer3.1.conv1.weight - torch.Size([256, 1024, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,876 - mmcv - INFO - \n",
++      "backbone.layer3.1.bn1.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,877 - mmcv - INFO - \n",
++      "backbone.layer3.1.bn1.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,878 - mmcv - INFO - \n",
++      "backbone.layer3.1.conv2.weight - torch.Size([256, 256, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,880 - mmcv - INFO - \n",
++      "backbone.layer3.1.bn2.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,881 - mmcv - INFO - \n",
++      "backbone.layer3.1.bn2.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,882 - mmcv - INFO - \n",
++      "backbone.layer3.1.conv3.weight - torch.Size([1024, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,883 - mmcv - INFO - \n",
++      "backbone.layer3.1.bn3.weight - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,883 - mmcv - INFO - \n",
++      "backbone.layer3.1.bn3.bias - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,884 - mmcv - INFO - \n",
++      "backbone.layer3.2.conv1.weight - torch.Size([256, 1024, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,886 - mmcv - INFO - \n",
++      "backbone.layer3.2.bn1.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,887 - mmcv - INFO - \n",
++      "backbone.layer3.2.bn1.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,889 - mmcv - INFO - \n",
++      "backbone.layer3.2.conv2.weight - torch.Size([256, 256, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,889 - mmcv - INFO - \n",
++      "backbone.layer3.2.bn2.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,890 - mmcv - INFO - \n",
++      "backbone.layer3.2.bn2.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,891 - mmcv - INFO - \n",
++      "backbone.layer3.2.conv3.weight - torch.Size([1024, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,892 - mmcv - INFO - \n",
++      "backbone.layer3.2.bn3.weight - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,893 - mmcv - INFO - \n",
++      "backbone.layer3.2.bn3.bias - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,894 - mmcv - INFO - \n",
++      "backbone.layer3.3.conv1.weight - torch.Size([256, 1024, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,895 - mmcv - INFO - \n",
++      "backbone.layer3.3.bn1.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,896 - mmcv - INFO - \n",
++      "backbone.layer3.3.bn1.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n"
++     ]
++    },
++    {
++     "name": "stderr",
++     "output_type": "stream",
++     "text": [
++      "2021-09-16 14:34:38,897 - mmcv - INFO - \n",
++      "backbone.layer3.3.conv2.weight - torch.Size([256, 256, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,898 - mmcv - INFO - \n",
++      "backbone.layer3.3.bn2.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,899 - mmcv - INFO - \n",
++      "backbone.layer3.3.bn2.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,900 - mmcv - INFO - \n",
++      "backbone.layer3.3.conv3.weight - torch.Size([1024, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,901 - mmcv - INFO - \n",
++      "backbone.layer3.3.bn3.weight - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,902 - mmcv - INFO - \n",
++      "backbone.layer3.3.bn3.bias - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,902 - mmcv - INFO - \n",
++      "backbone.layer3.4.conv1.weight - torch.Size([256, 1024, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,903 - mmcv - INFO - \n",
++      "backbone.layer3.4.bn1.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,904 - mmcv - INFO - \n",
++      "backbone.layer3.4.bn1.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,905 - mmcv - INFO - \n",
++      "backbone.layer3.4.conv2.weight - torch.Size([256, 256, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,907 - mmcv - INFO - \n",
++      "backbone.layer3.4.bn2.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,907 - mmcv - INFO - \n",
++      "backbone.layer3.4.bn2.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,908 - mmcv - INFO - \n",
++      "backbone.layer3.4.conv3.weight - torch.Size([1024, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,909 - mmcv - INFO - \n",
++      "backbone.layer3.4.bn3.weight - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,910 - mmcv - INFO - \n",
++      "backbone.layer3.4.bn3.bias - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,911 - mmcv - INFO - \n",
++      "backbone.layer3.5.conv1.weight - torch.Size([256, 1024, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,912 - mmcv - INFO - \n",
++      "backbone.layer3.5.bn1.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,913 - mmcv - INFO - \n",
++      "backbone.layer3.5.bn1.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,914 - mmcv - INFO - \n",
++      "backbone.layer3.5.conv2.weight - torch.Size([256, 256, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,915 - mmcv - INFO - \n",
++      "backbone.layer3.5.bn2.weight - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,916 - mmcv - INFO - \n",
++      "backbone.layer3.5.bn2.bias - torch.Size([256]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,917 - mmcv - INFO - \n",
++      "backbone.layer3.5.conv3.weight - torch.Size([1024, 256, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,917 - mmcv - INFO - \n",
++      "backbone.layer3.5.bn3.weight - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,918 - mmcv - INFO - \n",
++      "backbone.layer3.5.bn3.bias - torch.Size([1024]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,919 - mmcv - INFO - \n",
++      "backbone.layer4.0.conv1.weight - torch.Size([512, 1024, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,920 - mmcv - INFO - \n",
++      "backbone.layer4.0.bn1.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,921 - mmcv - INFO - \n",
++      "backbone.layer4.0.bn1.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,922 - mmcv - INFO - \n",
++      "backbone.layer4.0.conv2.weight - torch.Size([512, 512, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,923 - mmcv - INFO - \n",
++      "backbone.layer4.0.bn2.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,923 - mmcv - INFO - \n",
++      "backbone.layer4.0.bn2.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,924 - mmcv - INFO - \n",
++      "backbone.layer4.0.conv3.weight - torch.Size([2048, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,925 - mmcv - INFO - \n",
++      "backbone.layer4.0.bn3.weight - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,925 - mmcv - INFO - \n",
++      "backbone.layer4.0.bn3.bias - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,926 - mmcv - INFO - \n",
++      "backbone.layer4.0.downsample.0.weight - torch.Size([2048, 1024, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,927 - mmcv - INFO - \n",
++      "backbone.layer4.0.downsample.1.weight - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,927 - mmcv - INFO - \n",
++      "backbone.layer4.0.downsample.1.bias - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,928 - mmcv - INFO - \n",
++      "backbone.layer4.1.conv1.weight - torch.Size([512, 2048, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,929 - mmcv - INFO - \n",
++      "backbone.layer4.1.bn1.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,929 - mmcv - INFO - \n",
++      "backbone.layer4.1.bn1.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,930 - mmcv - INFO - \n",
++      "backbone.layer4.1.conv2.weight - torch.Size([512, 512, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,931 - mmcv - INFO - \n",
++      "backbone.layer4.1.bn2.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,931 - mmcv - INFO - \n",
++      "backbone.layer4.1.bn2.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,932 - mmcv - INFO - \n",
++      "backbone.layer4.1.conv3.weight - torch.Size([2048, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,933 - mmcv - INFO - \n",
++      "backbone.layer4.1.bn3.weight - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,933 - mmcv - INFO - \n",
++      "backbone.layer4.1.bn3.bias - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,934 - mmcv - INFO - \n",
++      "backbone.layer4.2.conv1.weight - torch.Size([512, 2048, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,935 - mmcv - INFO - \n",
++      "backbone.layer4.2.bn1.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,936 - mmcv - INFO - \n",
++      "backbone.layer4.2.bn1.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,936 - mmcv - INFO - \n",
++      "backbone.layer4.2.conv2.weight - torch.Size([512, 512, 3, 3]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,937 - mmcv - INFO - \n",
++      "backbone.layer4.2.bn2.weight - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,937 - mmcv - INFO - \n",
++      "backbone.layer4.2.bn2.bias - torch.Size([512]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,938 - mmcv - INFO - \n",
++      "backbone.layer4.2.conv3.weight - torch.Size([2048, 512, 1, 1]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,939 - mmcv - INFO - \n",
++      "backbone.layer4.2.bn3.weight - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,939 - mmcv - INFO - \n",
++      "backbone.layer4.2.bn3.bias - torch.Size([2048]): \n",
++      "PretrainedInit: load from torchvision://resnet50 \n",
++      " \n",
++      "2021-09-16 14:34:38,940 - mmcv - INFO - \n",
++      "neck.lateral_convs.0.conv.weight - torch.Size([256, 256, 1, 1]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,941 - mmcv - INFO - \n",
++      "neck.lateral_convs.0.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n"
++     ]
++    },
++    {
++     "name": "stderr",
++     "output_type": "stream",
++     "text": [
++      "2021-09-16 14:34:38,941 - mmcv - INFO - \n",
++      "neck.lateral_convs.1.conv.weight - torch.Size([256, 512, 1, 1]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,942 - mmcv - INFO - \n",
++      "neck.lateral_convs.1.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n",
++      "2021-09-16 14:34:38,942 - mmcv - INFO - \n",
++      "neck.lateral_convs.2.conv.weight - torch.Size([256, 1024, 1, 1]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,943 - mmcv - INFO - \n",
++      "neck.lateral_convs.2.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n",
++      "2021-09-16 14:34:38,944 - mmcv - INFO - \n",
++      "neck.lateral_convs.3.conv.weight - torch.Size([256, 2048, 1, 1]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,944 - mmcv - INFO - \n",
++      "neck.lateral_convs.3.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n",
++      "2021-09-16 14:34:38,945 - mmcv - INFO - \n",
++      "neck.fpn_convs.0.conv.weight - torch.Size([256, 256, 3, 3]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,946 - mmcv - INFO - \n",
++      "neck.fpn_convs.0.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n",
++      "2021-09-16 14:34:38,946 - mmcv - INFO - \n",
++      "neck.fpn_convs.1.conv.weight - torch.Size([256, 256, 3, 3]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,947 - mmcv - INFO - \n",
++      "neck.fpn_convs.1.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n",
++      "2021-09-16 14:34:38,948 - mmcv - INFO - \n",
++      "neck.fpn_convs.2.conv.weight - torch.Size([256, 256, 3, 3]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,948 - mmcv - INFO - \n",
++      "neck.fpn_convs.2.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n",
++      "2021-09-16 14:34:38,949 - mmcv - INFO - \n",
++      "neck.fpn_convs.3.conv.weight - torch.Size([256, 256, 3, 3]): \n",
++      "XavierInit: gain=1, distribution=uniform, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,950 - mmcv - INFO - \n",
++      "neck.fpn_convs.3.conv.bias - torch.Size([256]): \n",
++      "The value is the same before and after calling `init_weights` of FasterRCNN  \n",
++      " \n",
++      "2021-09-16 14:34:38,951 - mmcv - INFO - \n",
++      "rpn_head.rpn_conv.weight - torch.Size([256, 256, 3, 3]): \n",
++      "NormalInit: mean=0, std=0.01, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,951 - mmcv - INFO - \n",
++      "rpn_head.rpn_conv.bias - torch.Size([256]): \n",
++      "NormalInit: mean=0, std=0.01, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,952 - mmcv - INFO - \n",
++      "rpn_head.rpn_cls.weight - torch.Size([3, 256, 1, 1]): \n",
++      "NormalInit: mean=0, std=0.01, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,953 - mmcv - INFO - \n",
++      "rpn_head.rpn_cls.bias - torch.Size([3]): \n",
++      "NormalInit: mean=0, std=0.01, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,957 - mmcv - INFO - \n",
++      "rpn_head.rpn_reg.weight - torch.Size([12, 256, 1, 1]): \n",
++      "NormalInit: mean=0, std=0.01, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,958 - mmcv - INFO - \n",
++      "rpn_head.rpn_reg.bias - torch.Size([12]): \n",
++      "NormalInit: mean=0, std=0.01, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,958 - mmcv - INFO - \n",
++      "roi_head.bbox_head.fc_cls.weight - torch.Size([11, 1024]): \n",
++      "XavierInit: gain=1, distribution=normal, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,959 - mmcv - INFO - \n",
++      "roi_head.bbox_head.fc_cls.bias - torch.Size([11]): \n",
++      "NormalInit: mean=0, std=0.01, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,959 - mmcv - INFO - \n",
++      "roi_head.bbox_head.fc_reg.weight - torch.Size([40, 1024]): \n",
++      "XavierInit: gain=1, distribution=normal, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,960 - mmcv - INFO - \n",
++      "roi_head.bbox_head.fc_reg.bias - torch.Size([40]): \n",
++      "NormalInit: mean=0, std=0.001, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,961 - mmcv - INFO - \n",
++      "roi_head.bbox_head.shared_fcs.0.weight - torch.Size([1024, 12544]): \n",
++      "XavierInit: gain=1, distribution=normal, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,961 - mmcv - INFO - \n",
++      "roi_head.bbox_head.shared_fcs.0.bias - torch.Size([1024]): \n",
++      "XavierInit: gain=1, distribution=normal, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,962 - mmcv - INFO - \n",
++      "roi_head.bbox_head.shared_fcs.1.weight - torch.Size([1024, 1024]): \n",
++      "XavierInit: gain=1, distribution=normal, bias=0 \n",
++      " \n",
++      "2021-09-16 14:34:38,963 - mmcv - INFO - \n",
++      "roi_head.bbox_head.shared_fcs.1.bias - torch.Size([1024]): \n",
++      "XavierInit: gain=1, distribution=normal, bias=0 \n",
++      " \n"
+      ]
+     }
+    ],
+    "source": [
+-    "datasets = [build_dataset(cfg.data.train)]"
++    "# 모델 build 및 pretrained network 불러오기\n",
++    "model = build_detector(cfg.model)\n",
++    "model.init_weights()"
+    ]
+   },
+   {
+    "cell_type": "code",
+-   "execution_count": 5,
++   "execution_count": null,
+    "metadata": {},
+    "outputs": [
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "loading annotations into memory...\n"
+-     ]
+-    },
+     {
+      "name": "stderr",
+      "output_type": "stream",
+      "text": [
+-      "2021-08-15 12:22:57,552 - mmdet - INFO - Start running, host: root@boostcamp2-teacher005, work_dir: /home/hyelin/mmdetection/wordk_dirs/faster_rcnn_r50_fpn_1x_trash\n",
+-      "2021-08-15 12:22:57,553 - mmdet - INFO - Hooks will be executed in the following order:\n",
++      "2021-09-16 14:34:39,052 - mmdet - INFO - Start running, host: root@25a605f857fd, work_dir: /opt/ml/detection/mmdetection/work_dirs/faster_rcnn_r50_fpn_1x_trash\n",
++      "2021-09-16 14:34:39,053 - mmdet - INFO - Hooks will be executed in the following order:\n",
+       "before_run:\n",
+       "(VERY_HIGH   ) StepLrUpdaterHook                  \n",
+       "(NORMAL      ) CheckpointHook                     \n",
+-      "(NORMAL      ) EvalHook                           \n",
+       "(VERY_LOW    ) TextLoggerHook                     \n",
+       " -------------------- \n",
+       "before_train_epoch:\n",
+       "(VERY_HIGH   ) StepLrUpdaterHook                  \n",
+-      "(NORMAL      ) EvalHook                           \n",
+       "(NORMAL      ) NumClassCheckHook                  \n",
+       "(LOW         ) IterTimerHook                      \n",
+       "(VERY_LOW    ) TextLoggerHook                     \n",
+       " -------------------- \n",
+       "before_train_iter:\n",
+       "(VERY_HIGH   ) StepLrUpdaterHook                  \n",
+-      "(NORMAL      ) EvalHook                           \n",
+       "(LOW         ) IterTimerHook                      \n",
+       " -------------------- \n",
+       "after_train_iter:\n",
+       "(ABOVE_NORMAL) OptimizerHook                      \n",
+       "(NORMAL      ) CheckpointHook                     \n",
+-      "(NORMAL      ) EvalHook                           \n",
+       "(LOW         ) IterTimerHook                      \n",
+       "(VERY_LOW    ) TextLoggerHook                     \n",
+       " -------------------- \n",
+       "after_train_epoch:\n",
+       "(NORMAL      ) CheckpointHook                     \n",
+-      "(NORMAL      ) EvalHook                           \n",
+       "(VERY_LOW    ) TextLoggerHook                     \n",
+       " -------------------- \n",
+       "before_val_epoch:\n",
+@@ -163,742 +954,56 @@
+       "after_val_epoch:\n",
+       "(VERY_LOW    ) TextLoggerHook                     \n",
+       " -------------------- \n",
+-      "2021-08-15 12:22:57,554 - mmdet - INFO - workflow: [('train', 1)], max: 12 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Done (t=1.29s)\n",
+-      "creating index...\n",
+-      "index created!\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "/home/hyelin/mmdetection/mmdet/core/anchor/anchor_generator.py:323: UserWarning: ``grid_anchors`` would be deprecated soon. Please use ``grid_priors`` \n",
+-      "  warnings.warn('``grid_anchors`` would be deprecated soon. '\n",
+-      "/home/hyelin/mmdetection/mmdet/core/anchor/anchor_generator.py:360: UserWarning: ``single_level_grid_anchors`` would be deprecated soon. Please use ``single_level_grid_priors`` \n",
+-      "  '``single_level_grid_anchors`` would be deprecated soon. '\n",
+-      "2021-08-15 12:23:10,397 - mmdet - INFO - Epoch [1][50/655]\tlr: 1.978e-03, eta: 0:33:25, time: 0.257, data_time: 0.049, memory: 2099, loss_rpn_cls: 0.4915, loss_rpn_bbox: 0.0926, loss_cls: 1.1324, acc: 85.9189, loss_bbox: 0.1610, loss: 1.8774, grad_norm: 5.3722\n",
+-      "2021-08-15 12:23:21,090 - mmdet - INFO - Epoch [1][100/655]\tlr: 3.976e-03, eta: 0:30:26, time: 0.214, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.3372, loss_rpn_bbox: 0.0877, loss_cls: 0.4305, acc: 92.8984, loss_bbox: 0.2415, loss: 1.0969, grad_norm: 1.8828\n",
+-      "2021-08-15 12:23:31,514 - mmdet - INFO - Epoch [1][150/655]\tlr: 5.974e-03, eta: 0:29:05, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.3199, loss_rpn_bbox: 0.0904, loss_cls: 0.4163, acc: 91.5469, loss_bbox: 0.3014, loss: 1.1279, grad_norm: 1.5767\n",
+-      "2021-08-15 12:23:42,022 - mmdet - INFO - Epoch [1][200/655]\tlr: 7.972e-03, eta: 0:28:22, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.3219, loss_rpn_bbox: 0.0955, loss_cls: 0.4332, acc: 91.7207, loss_bbox: 0.2907, loss: 1.1413, grad_norm: 2.1307\n",
+-      "2021-08-15 12:23:52,383 - mmdet - INFO - Epoch [1][250/655]\tlr: 9.970e-03, eta: 0:27:48, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.3324, loss_rpn_bbox: 0.0966, loss_cls: 0.4738, acc: 91.2236, loss_bbox: 0.3126, loss: 1.2153, grad_norm: 2.0484\n",
+-      "2021-08-15 12:24:02,915 - mmdet - INFO - Epoch [1][300/655]\tlr: 1.197e-02, eta: 0:27:26, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2739, loss_rpn_bbox: 0.0804, loss_cls: 0.4509, acc: 90.8164, loss_bbox: 0.3383, loss: 1.1435, grad_norm: 1.6490\n",
+-      "2021-08-15 12:24:13,507 - mmdet - INFO - Epoch [1][350/655]\tlr: 1.397e-02, eta: 0:27:09, time: 0.212, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2618, loss_rpn_bbox: 0.0775, loss_cls: 0.4191, acc: 91.1230, loss_bbox: 0.3256, loss: 1.0840, grad_norm: 1.4355\n",
+-      "2021-08-15 12:24:24,011 - mmdet - INFO - Epoch [1][400/655]\tlr: 1.596e-02, eta: 0:26:52, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2930, loss_rpn_bbox: 0.0900, loss_cls: 0.4739, acc: 90.0449, loss_bbox: 0.3592, loss: 1.2161, grad_norm: 1.5670\n",
+-      "2021-08-15 12:24:34,438 - mmdet - INFO - Epoch [1][450/655]\tlr: 1.796e-02, eta: 0:26:35, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2907, loss_rpn_bbox: 0.0938, loss_cls: 0.4717, acc: 90.2520, loss_bbox: 0.3498, loss: 1.2060, grad_norm: 1.4118\n",
+-      "2021-08-15 12:24:44,908 - mmdet - INFO - Epoch [1][500/655]\tlr: 1.996e-02, eta: 0:26:20, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2780, loss_rpn_bbox: 0.0903, loss_cls: 0.4460, acc: 91.0635, loss_bbox: 0.3177, loss: 1.1320, grad_norm: 1.4641\n",
+-      "2021-08-15 12:24:55,288 - mmdet - INFO - Epoch [1][550/655]\tlr: 2.000e-02, eta: 0:26:04, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2518, loss_rpn_bbox: 0.0742, loss_cls: 0.4582, acc: 91.3008, loss_bbox: 0.3158, loss: 1.1001, grad_norm: 1.4061\n",
+-      "2021-08-15 12:25:05,950 - mmdet - INFO - Epoch [1][600/655]\tlr: 2.000e-02, eta: 0:25:53, time: 0.213, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2728, loss_rpn_bbox: 0.0824, loss_cls: 0.4356, acc: 91.1230, loss_bbox: 0.3172, loss: 1.1080, grad_norm: 1.1786\n",
+-      "2021-08-15 12:25:16,355 - mmdet - INFO - Epoch [1][650/655]\tlr: 2.000e-02, eta: 0:25:39, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2593, loss_rpn_bbox: 0.0768, loss_cls: 0.4479, acc: 90.8857, loss_bbox: 0.3251, loss: 1.1092, grad_norm: 1.2416\n",
+-      "2021-08-15 12:25:17,409 - mmdet - INFO - Saving checkpoint at 1 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 36.0 task/s, elapsed: 18s, ETA:     0s"
++      "2021-09-16 14:34:39,054 - mmdet - INFO - workflow: [('train', 1)], max: 12 epochs\n",
++      "2021-09-16 14:34:53,749 - mmdet - INFO - Epoch [1][50/1221]\tlr: 1.978e-03, eta: 1:11:30, time: 0.294, data_time: 0.051, memory: 2449, loss_rpn_cls: 0.4922, loss_rpn_bbox: 0.0510, loss_cls: 0.4993, acc: 88.0322, loss_bbox: 0.1488, loss: 1.1914, grad_norm: 11.2839\n",
++      "2021-09-16 14:35:05,457 - mmdet - INFO - Epoch [1][100/1221]\tlr: 3.976e-03, eta: 1:04:01, time: 0.234, data_time: 0.007, memory: 2449, loss_rpn_cls: 0.1665, loss_rpn_bbox: 0.0478, loss_cls: 0.3251, acc: 93.9326, loss_bbox: 0.2429, loss: 0.7823, grad_norm: 3.1851\n",
++      "2021-09-16 14:35:17,132 - mmdet - INFO - Epoch [1][150/1221]\tlr: 5.974e-03, eta: 1:01:21, time: 0.234, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1274, loss_rpn_bbox: 0.0383, loss_cls: 0.3128, acc: 94.0996, loss_bbox: 0.2334, loss: 0.7120, grad_norm: 3.0445\n",
++      "2021-09-16 14:35:28,824 - mmdet - INFO - Epoch [1][200/1221]\tlr: 7.972e-03, eta: 0:59:56, time: 0.234, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1535, loss_rpn_bbox: 0.0563, loss_cls: 0.3844, acc: 92.4883, loss_bbox: 0.2878, loss: 0.8819, grad_norm: 3.3047\n",
++      "2021-09-16 14:35:40,341 - mmdet - INFO - Epoch [1][250/1221]\tlr: 9.970e-03, eta: 0:58:50, time: 0.230, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1269, loss_rpn_bbox: 0.0496, loss_cls: 0.3333, acc: 93.1357, loss_bbox: 0.2527, loss: 0.7626, grad_norm: 3.0605\n",
++      "2021-09-16 14:35:51,995 - mmdet - INFO - Epoch [1][300/1221]\tlr: 1.197e-02, eta: 0:58:09, time: 0.233, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1520, loss_rpn_bbox: 0.0600, loss_cls: 0.3949, acc: 91.3984, loss_bbox: 0.3067, loss: 0.9137, grad_norm: 2.8299\n",
++      "2021-09-16 14:36:03,847 - mmdet - INFO - Epoch [1][350/1221]\tlr: 1.397e-02, eta: 0:57:44, time: 0.237, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1217, loss_rpn_bbox: 0.0483, loss_cls: 0.3616, acc: 91.6680, loss_bbox: 0.2921, loss: 0.8236, grad_norm: 2.6290\n",
++      "2021-09-16 14:36:15,432 - mmdet - INFO - Epoch [1][400/1221]\tlr: 1.596e-02, eta: 0:57:13, time: 0.232, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0984, loss_rpn_bbox: 0.0383, loss_cls: 0.3354, acc: 92.4805, loss_bbox: 0.2537, loss: 0.7258, grad_norm: 2.2989\n",
++      "2021-09-16 14:36:27,003 - mmdet - INFO - Epoch [1][450/1221]\tlr: 1.796e-02, eta: 0:56:46, time: 0.231, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1117, loss_rpn_bbox: 0.0430, loss_cls: 0.3615, acc: 92.2148, loss_bbox: 0.2609, loss: 0.7771, grad_norm: 2.5507\n",
++      "2021-09-16 14:36:39,228 - mmdet - INFO - Epoch [1][500/1221]\tlr: 1.996e-02, eta: 0:56:41, time: 0.245, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1177, loss_rpn_bbox: 0.0435, loss_cls: 0.3263, acc: 92.8643, loss_bbox: 0.2391, loss: 0.7265, grad_norm: 2.3583\n",
++      "2021-09-16 14:36:50,990 - mmdet - INFO - Epoch [1][550/1221]\tlr: 2.000e-02, eta: 0:56:22, time: 0.235, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1456, loss_rpn_bbox: 0.0547, loss_cls: 0.3994, acc: 91.8682, loss_bbox: 0.2724, loss: 0.8722, grad_norm: 2.6270\n",
++      "2021-09-16 14:37:02,935 - mmdet - INFO - Epoch [1][600/1221]\tlr: 2.000e-02, eta: 0:56:09, time: 0.239, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1006, loss_rpn_bbox: 0.0478, loss_cls: 0.3616, acc: 91.5078, loss_bbox: 0.2770, loss: 0.7870, grad_norm: 2.0464\n",
++      "2021-09-16 14:37:15,105 - mmdet - INFO - Epoch [1][650/1221]\tlr: 2.000e-02, eta: 0:56:01, time: 0.243, data_time: 0.007, memory: 2449, loss_rpn_cls: 0.1061, loss_rpn_bbox: 0.0460, loss_cls: 0.3399, acc: 92.1074, loss_bbox: 0.2512, loss: 0.7432, grad_norm: 1.9609\n",
++      "2021-09-16 14:37:26,620 - mmdet - INFO - Epoch [1][700/1221]\tlr: 2.000e-02, eta: 0:55:39, time: 0.230, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0926, loss_rpn_bbox: 0.0421, loss_cls: 0.3452, acc: 92.0723, loss_bbox: 0.2531, loss: 0.7331, grad_norm: 1.9034\n",
++      "2021-09-16 14:37:38,349 - mmdet - INFO - Epoch [1][750/1221]\tlr: 2.000e-02, eta: 0:55:23, time: 0.235, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0862, loss_rpn_bbox: 0.0392, loss_cls: 0.3436, acc: 91.8770, loss_bbox: 0.2576, loss: 0.7266, grad_norm: 1.8894\n",
++      "2021-09-16 14:37:50,688 - mmdet - INFO - Epoch [1][800/1221]\tlr: 2.000e-02, eta: 0:55:18, time: 0.247, data_time: 0.007, memory: 2449, loss_rpn_cls: 0.1033, loss_rpn_bbox: 0.0542, loss_cls: 0.3714, acc: 90.7002, loss_bbox: 0.2981, loss: 0.8270, grad_norm: 2.0211\n",
++      "2021-09-16 14:38:02,677 - mmdet - INFO - Epoch [1][850/1221]\tlr: 2.000e-02, eta: 0:55:06, time: 0.240, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0807, loss_rpn_bbox: 0.0437, loss_cls: 0.3340, acc: 91.5557, loss_bbox: 0.2535, loss: 0.7118, grad_norm: 1.9721\n",
++      "2021-09-16 14:38:14,559 - mmdet - INFO - Epoch [1][900/1221]\tlr: 2.000e-02, eta: 0:54:52, time: 0.238, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0996, loss_rpn_bbox: 0.0425, loss_cls: 0.3513, acc: 91.4512, loss_bbox: 0.2497, loss: 0.7432, grad_norm: 1.8913\n",
++      "2021-09-16 14:38:26,541 - mmdet - INFO - Epoch [1][950/1221]\tlr: 2.000e-02, eta: 0:54:40, time: 0.240, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.1005, loss_rpn_bbox: 0.0492, loss_cls: 0.3885, acc: 90.2822, loss_bbox: 0.2923, loss: 0.8306, grad_norm: 1.9999\n",
++      "2021-09-16 14:38:38,259 - mmdet - INFO - Epoch [1][1000/1221]\tlr: 2.000e-02, eta: 0:54:25, time: 0.234, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0963, loss_rpn_bbox: 0.0469, loss_cls: 0.3544, acc: 91.3076, loss_bbox: 0.2656, loss: 0.7633, grad_norm: 1.9158\n",
++      "2021-09-16 14:38:49,970 - mmdet - INFO - Epoch [1][1050/1221]\tlr: 2.000e-02, eta: 0:54:10, time: 0.234, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0654, loss_rpn_bbox: 0.0324, loss_cls: 0.3411, acc: 91.5127, loss_bbox: 0.2484, loss: 0.6873, grad_norm: 1.7885\n",
++      "2021-09-16 14:39:01,730 - mmdet - INFO - Epoch [1][1100/1221]\tlr: 2.000e-02, eta: 0:53:56, time: 0.235, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0719, loss_rpn_bbox: 0.0424, loss_cls: 0.3205, acc: 92.0283, loss_bbox: 0.2404, loss: 0.6752, grad_norm: 1.7243\n",
++      "2021-09-16 14:39:13,774 - mmdet - INFO - Epoch [1][1150/1221]\tlr: 2.000e-02, eta: 0:53:45, time: 0.241, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0991, loss_rpn_bbox: 0.0512, loss_cls: 0.3580, acc: 91.3975, loss_bbox: 0.2621, loss: 0.7704, grad_norm: 2.0067\n",
++      "2021-09-16 14:39:25,497 - mmdet - INFO - Epoch [1][1200/1221]\tlr: 2.000e-02, eta: 0:53:30, time: 0.234, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0727, loss_rpn_bbox: 0.0397, loss_cls: 0.3219, acc: 91.6953, loss_bbox: 0.2459, loss: 0.6802, grad_norm: 1.8079\n",
++      "2021-09-16 14:39:30,676 - mmdet - INFO - Saving checkpoint at 1 epochs\n",
++      "2021-09-16 14:39:45,485 - mmdet - INFO - Epoch [2][50/1221]\tlr: 2.000e-02, eta: 0:52:44, time: 0.282, data_time: 0.051, memory: 2449, loss_rpn_cls: 0.0727, loss_rpn_bbox: 0.0380, loss_cls: 0.3266, acc: 91.6533, loss_bbox: 0.2421, loss: 0.6795, grad_norm: 1.7529\n"
+      ]
+     },
+     {
+      "name": "stderr",
+      "output_type": "stream",
+      "text": [
+-      "2021-08-15 12:25:36,750 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.02s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=2.10s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:25:39,805 - mmdet - INFO - Epoch(val) [1][655]\tbbox_mAP: 0.0010, bbox_mAP_50: 0.0040, bbox_mAP_75: 0.0010, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.0040, bbox_mAP_l: 0.0020, bbox_mAP_copypaste: 0.001 0.004 0.001 0.000 0.004 0.002\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=0.48s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.001\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.004\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.001\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.004\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.002\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.012\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.012\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.012\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.003\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.028\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:25:52,457 - mmdet - INFO - Epoch [2][50/655]\tlr: 2.000e-02, eta: 0:25:36, time: 0.253, data_time: 0.051, memory: 2100, loss_rpn_cls: 0.2491, loss_rpn_bbox: 0.0721, loss_cls: 0.4294, acc: 90.7871, loss_bbox: 0.3276, loss: 1.0782, grad_norm: 1.0733\n",
+-      "2021-08-15 12:26:03,266 - mmdet - INFO - Epoch [2][100/655]\tlr: 2.000e-02, eta: 0:25:26, time: 0.216, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2929, loss_rpn_bbox: 0.0908, loss_cls: 0.4321, acc: 90.8018, loss_bbox: 0.3179, loss: 1.1337, grad_norm: 1.1091\n",
+-      "2021-08-15 12:26:13,900 - mmdet - INFO - Epoch [2][150/655]\tlr: 2.000e-02, eta: 0:25:15, time: 0.213, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2540, loss_rpn_bbox: 0.0760, loss_cls: 0.3992, acc: 91.4326, loss_bbox: 0.2992, loss: 1.0284, grad_norm: 0.9320\n",
+-      "2021-08-15 12:26:24,446 - mmdet - INFO - Epoch [2][200/655]\tlr: 2.000e-02, eta: 0:25:02, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2551, loss_rpn_bbox: 0.0817, loss_cls: 0.4561, acc: 90.0215, loss_bbox: 0.3519, loss: 1.1448, grad_norm: 1.0173\n",
+-      "2021-08-15 12:26:34,870 - mmdet - INFO - Epoch [2][250/655]\tlr: 2.000e-02, eta: 0:24:49, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2631, loss_rpn_bbox: 0.0809, loss_cls: 0.4223, acc: 90.8779, loss_bbox: 0.3109, loss: 1.0773, grad_norm: 1.0821\n",
+-      "2021-08-15 12:26:45,548 - mmdet - INFO - Epoch [2][300/655]\tlr: 2.000e-02, eta: 0:24:38, time: 0.214, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2673, loss_rpn_bbox: 0.0855, loss_cls: 0.4415, acc: 90.2881, loss_bbox: 0.3329, loss: 1.1271, grad_norm: 1.0146\n",
+-      "2021-08-15 12:26:56,109 - mmdet - INFO - Epoch [2][350/655]\tlr: 2.000e-02, eta: 0:24:27, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2957, loss_rpn_bbox: 0.0982, loss_cls: 0.4744, acc: 89.4629, loss_bbox: 0.3578, loss: 1.2260, grad_norm: 1.1126\n",
+-      "2021-08-15 12:27:06,414 - mmdet - INFO - Epoch [2][400/655]\tlr: 2.000e-02, eta: 0:24:13, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2413, loss_rpn_bbox: 0.0816, loss_cls: 0.4059, acc: 90.9932, loss_bbox: 0.3067, loss: 1.0355, grad_norm: 0.9855\n",
+-      "2021-08-15 12:27:16,915 - mmdet - INFO - Epoch [2][450/655]\tlr: 2.000e-02, eta: 0:24:02, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2582, loss_rpn_bbox: 0.0800, loss_cls: 0.4451, acc: 90.0312, loss_bbox: 0.3450, loss: 1.1283, grad_norm: 1.1152\n",
+-      "2021-08-15 12:27:27,464 - mmdet - INFO - Epoch [2][500/655]\tlr: 2.000e-02, eta: 0:23:50, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2426, loss_rpn_bbox: 0.0750, loss_cls: 0.4201, acc: 90.2998, loss_bbox: 0.3338, loss: 1.0715, grad_norm: 1.0147\n",
+-      "2021-08-15 12:27:37,933 - mmdet - INFO - Epoch [2][550/655]\tlr: 2.000e-02, eta: 0:23:38, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2523, loss_rpn_bbox: 0.0859, loss_cls: 0.4158, acc: 90.5068, loss_bbox: 0.3196, loss: 1.0736, grad_norm: 1.0101\n",
+-      "2021-08-15 12:27:48,488 - mmdet - INFO - Epoch [2][600/655]\tlr: 2.000e-02, eta: 0:23:27, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2599, loss_rpn_bbox: 0.0809, loss_cls: 0.4016, acc: 91.0186, loss_bbox: 0.2997, loss: 1.0421, grad_norm: 0.9795\n",
+-      "2021-08-15 12:27:58,948 - mmdet - INFO - Epoch [2][650/655]\tlr: 2.000e-02, eta: 0:23:16, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2337, loss_rpn_bbox: 0.0765, loss_cls: 0.4136, acc: 90.3105, loss_bbox: 0.3327, loss: 1.0565, grad_norm: 1.0360\n",
+-      "2021-08-15 12:28:00,001 - mmdet - INFO - Saving checkpoint at 2 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 35.9 task/s, elapsed: 18s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:28:19,711 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.41s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=3.83s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:28:25,444 - mmdet - INFO - Epoch(val) [2][655]\tbbox_mAP: 0.0060, bbox_mAP_50: 0.0170, bbox_mAP_75: 0.0020, bbox_mAP_s: 0.0010, bbox_mAP_m: 0.0100, bbox_mAP_l: 0.0130, bbox_mAP_copypaste: 0.006 0.017 0.002 0.001 0.010 0.013\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=0.94s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.006\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.017\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.002\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.001\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.010\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.013\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.037\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.037\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.037\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.004\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.021\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.091\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:28:38,314 - mmdet - INFO - Epoch [3][50/655]\tlr: 2.000e-02, eta: 0:23:09, time: 0.257, data_time: 0.050, memory: 2100, loss_rpn_cls: 0.2212, loss_rpn_bbox: 0.0704, loss_cls: 0.4017, acc: 90.6592, loss_bbox: 0.3147, loss: 1.0080, grad_norm: 0.9837\n",
+-      "2021-08-15 12:28:49,096 - mmdet - INFO - Epoch [3][100/655]\tlr: 2.000e-02, eta: 0:22:59, time: 0.216, data_time: 0.007, memory: 2100, loss_rpn_cls: 0.2440, loss_rpn_bbox: 0.0852, loss_cls: 0.3866, acc: 91.4482, loss_bbox: 0.2816, loss: 0.9974, grad_norm: 1.0874\n",
+-      "2021-08-15 12:28:59,767 - mmdet - INFO - Epoch [3][150/655]\tlr: 2.000e-02, eta: 0:22:48, time: 0.213, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2400, loss_rpn_bbox: 0.0758, loss_cls: 0.3992, acc: 91.1113, loss_bbox: 0.2946, loss: 1.0096, grad_norm: 1.0958\n",
+-      "2021-08-15 12:29:10,337 - mmdet - INFO - Epoch [3][200/655]\tlr: 2.000e-02, eta: 0:22:37, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2700, loss_rpn_bbox: 0.0867, loss_cls: 0.4214, acc: 90.2832, loss_bbox: 0.3203, loss: 1.0985, grad_norm: 1.0635\n",
+-      "2021-08-15 12:29:20,880 - mmdet - INFO - Epoch [3][250/655]\tlr: 2.000e-02, eta: 0:22:26, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2710, loss_rpn_bbox: 0.0893, loss_cls: 0.4403, acc: 90.0273, loss_bbox: 0.3282, loss: 1.1289, grad_norm: 1.1275\n",
+-      "2021-08-15 12:29:31,292 - mmdet - INFO - Epoch [3][300/655]\tlr: 2.000e-02, eta: 0:22:14, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2415, loss_rpn_bbox: 0.0791, loss_cls: 0.4141, acc: 90.1338, loss_bbox: 0.3252, loss: 1.0599, grad_norm: 1.0115\n",
+-      "2021-08-15 12:29:41,656 - mmdet - INFO - Epoch [3][350/655]\tlr: 2.000e-02, eta: 0:22:02, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2166, loss_rpn_bbox: 0.0753, loss_cls: 0.4296, acc: 90.0576, loss_bbox: 0.3390, loss: 1.0604, grad_norm: 1.0494\n",
+-      "2021-08-15 12:29:52,029 - mmdet - INFO - Epoch [3][400/655]\tlr: 2.000e-02, eta: 0:21:50, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2357, loss_rpn_bbox: 0.0803, loss_cls: 0.4308, acc: 89.8389, loss_bbox: 0.3360, loss: 1.0827, grad_norm: 1.1510\n",
+-      "2021-08-15 12:30:02,340 - mmdet - INFO - Epoch [3][450/655]\tlr: 2.000e-02, eta: 0:21:39, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2045, loss_rpn_bbox: 0.0664, loss_cls: 0.4068, acc: 90.3789, loss_bbox: 0.3225, loss: 1.0003, grad_norm: 1.0686\n",
+-      "2021-08-15 12:30:12,777 - mmdet - INFO - Epoch [3][500/655]\tlr: 2.000e-02, eta: 0:21:27, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2478, loss_rpn_bbox: 0.0878, loss_cls: 0.4230, acc: 89.7793, loss_bbox: 0.3400, loss: 1.0986, grad_norm: 1.2217\n",
+-      "2021-08-15 12:30:23,079 - mmdet - INFO - Epoch [3][550/655]\tlr: 2.000e-02, eta: 0:21:15, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2371, loss_rpn_bbox: 0.0811, loss_cls: 0.4266, acc: 89.7646, loss_bbox: 0.3362, loss: 1.0810, grad_norm: 1.1980\n",
+-      "2021-08-15 12:30:33,428 - mmdet - INFO - Epoch [3][600/655]\tlr: 2.000e-02, eta: 0:21:04, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2360, loss_rpn_bbox: 0.0807, loss_cls: 0.4007, acc: 90.7793, loss_bbox: 0.3065, loss: 1.0240, grad_norm: 1.0440\n",
+-      "2021-08-15 12:30:43,973 - mmdet - INFO - Epoch [3][650/655]\tlr: 2.000e-02, eta: 0:20:53, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2070, loss_rpn_bbox: 0.0788, loss_cls: 0.3993, acc: 90.1523, loss_bbox: 0.3194, loss: 1.0045, grad_norm: 1.0460\n",
+-      "2021-08-15 12:30:45,016 - mmdet - INFO - Saving checkpoint at 3 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 35.9 task/s, elapsed: 18s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:31:05,102 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.05s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=4.29s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:31:10,986 - mmdet - INFO - Epoch(val) [3][655]\tbbox_mAP: 0.0100, bbox_mAP_50: 0.0290, bbox_mAP_75: 0.0050, bbox_mAP_s: 0.0020, bbox_mAP_m: 0.0150, bbox_mAP_l: 0.0240, bbox_mAP_copypaste: 0.010 0.029 0.005 0.002 0.015 0.024\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=0.96s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.010\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.029\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.005\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.002\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.015\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.024\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.048\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.048\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.048\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.002\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.030\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.121\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:31:23,828 - mmdet - INFO - Epoch [4][50/655]\tlr: 2.000e-02, eta: 0:20:45, time: 0.257, data_time: 0.049, memory: 2100, loss_rpn_cls: 0.1979, loss_rpn_bbox: 0.0651, loss_cls: 0.3694, acc: 91.2715, loss_bbox: 0.2876, loss: 0.9199, grad_norm: 1.0870\n",
+-      "2021-08-15 12:31:34,343 - mmdet - INFO - Epoch [4][100/655]\tlr: 2.000e-02, eta: 0:20:34, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2357, loss_rpn_bbox: 0.0819, loss_cls: 0.4408, acc: 89.4990, loss_bbox: 0.3406, loss: 1.0990, grad_norm: 1.2515\n",
+-      "2021-08-15 12:31:44,787 - mmdet - INFO - Epoch [4][150/655]\tlr: 2.000e-02, eta: 0:20:22, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2300, loss_rpn_bbox: 0.0794, loss_cls: 0.4352, acc: 89.8506, loss_bbox: 0.3307, loss: 1.0752, grad_norm: 1.1525\n",
+-      "2021-08-15 12:31:55,202 - mmdet - INFO - Epoch [4][200/655]\tlr: 2.000e-02, eta: 0:20:11, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2072, loss_rpn_bbox: 0.0803, loss_cls: 0.3975, acc: 90.3838, loss_bbox: 0.3132, loss: 0.9983, grad_norm: 1.1998\n",
+-      "2021-08-15 12:32:05,716 - mmdet - INFO - Epoch [4][250/655]\tlr: 2.000e-02, eta: 0:20:00, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2126, loss_rpn_bbox: 0.0680, loss_cls: 0.3947, acc: 90.4795, loss_bbox: 0.3121, loss: 0.9875, grad_norm: 1.2379\n",
+-      "2021-08-15 12:32:16,096 - mmdet - INFO - Epoch [4][300/655]\tlr: 2.000e-02, eta: 0:19:49, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2081, loss_rpn_bbox: 0.0766, loss_cls: 0.4146, acc: 89.9180, loss_bbox: 0.3345, loss: 1.0337, grad_norm: 1.2099\n",
+-      "2021-08-15 12:32:26,530 - mmdet - INFO - Epoch [4][350/655]\tlr: 2.000e-02, eta: 0:19:38, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2251, loss_rpn_bbox: 0.0811, loss_cls: 0.4105, acc: 89.8135, loss_bbox: 0.3306, loss: 1.0472, grad_norm: 1.1802\n",
+-      "2021-08-15 12:32:36,939 - mmdet - INFO - Epoch [4][400/655]\tlr: 2.000e-02, eta: 0:19:27, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2229, loss_rpn_bbox: 0.0909, loss_cls: 0.4328, acc: 89.5078, loss_bbox: 0.3389, loss: 1.0854, grad_norm: 1.1720\n",
+-      "2021-08-15 12:32:47,685 - mmdet - INFO - Epoch [4][450/655]\tlr: 2.000e-02, eta: 0:19:16, time: 0.215, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1892, loss_rpn_bbox: 0.0695, loss_cls: 0.3923, acc: 90.8574, loss_bbox: 0.2970, loss: 0.9479, grad_norm: 1.2079\n",
+-      "2021-08-15 12:32:58,062 - mmdet - INFO - Epoch [4][500/655]\tlr: 2.000e-02, eta: 0:19:05, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2205, loss_rpn_bbox: 0.0816, loss_cls: 0.4022, acc: 90.0371, loss_bbox: 0.3168, loss: 1.0211, grad_norm: 1.2620\n",
+-      "2021-08-15 12:33:08,494 - mmdet - INFO - Epoch [4][550/655]\tlr: 2.000e-02, eta: 0:18:54, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1940, loss_rpn_bbox: 0.0765, loss_cls: 0.4050, acc: 89.9902, loss_bbox: 0.3256, loss: 1.0010, grad_norm: 1.2772\n",
+-      "2021-08-15 12:33:18,836 - mmdet - INFO - Epoch [4][600/655]\tlr: 2.000e-02, eta: 0:18:43, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1752, loss_rpn_bbox: 0.0672, loss_cls: 0.3983, acc: 90.1270, loss_bbox: 0.3232, loss: 0.9640, grad_norm: 1.1387\n",
+-      "2021-08-15 12:33:29,133 - mmdet - INFO - Epoch [4][650/655]\tlr: 2.000e-02, eta: 0:18:32, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2251, loss_rpn_bbox: 0.0894, loss_cls: 0.4194, acc: 89.5029, loss_bbox: 0.3347, loss: 1.0686, grad_norm: 1.2404\n",
+-      "2021-08-15 12:33:30,204 - mmdet - INFO - Saving checkpoint at 4 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 35.8 task/s, elapsed: 18s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:33:50,536 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.44s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=5.38s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:33:57,799 - mmdet - INFO - Epoch(val) [4][655]\tbbox_mAP: 0.0140, bbox_mAP_50: 0.0390, bbox_mAP_75: 0.0050, bbox_mAP_s: 0.0020, bbox_mAP_m: 0.0160, bbox_mAP_l: 0.0330, bbox_mAP_copypaste: 0.014 0.039 0.005 0.002 0.016 0.033\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=1.20s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.014\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.039\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.005\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.002\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.016\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.033\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.064\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.064\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.064\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.004\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.041\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.158\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:34:10,564 - mmdet - INFO - Epoch [5][50/655]\tlr: 2.000e-02, eta: 0:18:22, time: 0.255, data_time: 0.050, memory: 2100, loss_rpn_cls: 0.2167, loss_rpn_bbox: 0.0838, loss_cls: 0.4377, acc: 89.0830, loss_bbox: 0.3514, loss: 1.0896, grad_norm: 1.3470\n",
+-      "2021-08-15 12:34:21,008 - mmdet - INFO - Epoch [5][100/655]\tlr: 2.000e-02, eta: 0:18:11, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2217, loss_rpn_bbox: 0.0859, loss_cls: 0.4292, acc: 89.0332, loss_bbox: 0.3500, loss: 1.0869, grad_norm: 1.1860\n",
+-      "2021-08-15 12:34:31,484 - mmdet - INFO - Epoch [5][150/655]\tlr: 2.000e-02, eta: 0:18:00, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2055, loss_rpn_bbox: 0.0878, loss_cls: 0.4264, acc: 89.2695, loss_bbox: 0.3484, loss: 1.0681, grad_norm: 1.1925\n",
+-      "2021-08-15 12:34:42,153 - mmdet - INFO - Epoch [5][200/655]\tlr: 2.000e-02, eta: 0:17:50, time: 0.213, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1773, loss_rpn_bbox: 0.0733, loss_cls: 0.4037, acc: 89.7539, loss_bbox: 0.3293, loss: 0.9836, grad_norm: 1.1549\n",
+-      "2021-08-15 12:34:52,628 - mmdet - INFO - Epoch [5][250/655]\tlr: 2.000e-02, eta: 0:17:39, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1962, loss_rpn_bbox: 0.0810, loss_cls: 0.3918, acc: 89.8242, loss_bbox: 0.3264, loss: 0.9954, grad_norm: 1.3233\n",
+-      "2021-08-15 12:35:03,417 - mmdet - INFO - Epoch [5][300/655]\tlr: 2.000e-02, eta: 0:17:29, time: 0.216, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1800, loss_rpn_bbox: 0.0703, loss_cls: 0.3939, acc: 90.3691, loss_bbox: 0.3126, loss: 0.9568, grad_norm: 1.1577\n",
+-      "2021-08-15 12:35:14,497 - mmdet - INFO - Epoch [5][350/655]\tlr: 2.000e-02, eta: 0:17:19, time: 0.222, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1759, loss_rpn_bbox: 0.0702, loss_cls: 0.3950, acc: 89.9053, loss_bbox: 0.3249, loss: 0.9658, grad_norm: 1.2485\n",
+-      "2021-08-15 12:35:25,075 - mmdet - INFO - Epoch [5][400/655]\tlr: 2.000e-02, eta: 0:17:08, time: 0.212, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1777, loss_rpn_bbox: 0.0737, loss_cls: 0.3878, acc: 90.3838, loss_bbox: 0.3063, loss: 0.9455, grad_norm: 1.2288\n",
+-      "2021-08-15 12:35:35,487 - mmdet - INFO - Epoch [5][450/655]\tlr: 2.000e-02, eta: 0:16:57, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1829, loss_rpn_bbox: 0.0696, loss_cls: 0.4152, acc: 89.9258, loss_bbox: 0.3233, loss: 0.9910, grad_norm: 1.2149\n",
+-      "2021-08-15 12:35:45,702 - mmdet - INFO - Epoch [5][500/655]\tlr: 2.000e-02, eta: 0:16:46, time: 0.204, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1832, loss_rpn_bbox: 0.0690, loss_cls: 0.3792, acc: 90.6475, loss_bbox: 0.2958, loss: 0.9273, grad_norm: 1.2567\n",
+-      "2021-08-15 12:35:56,117 - mmdet - INFO - Epoch [5][550/655]\tlr: 2.000e-02, eta: 0:16:35, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1989, loss_rpn_bbox: 0.0791, loss_cls: 0.4043, acc: 89.7500, loss_bbox: 0.3276, loss: 1.0099, grad_norm: 1.3055\n",
+-      "2021-08-15 12:36:06,529 - mmdet - INFO - Epoch [5][600/655]\tlr: 2.000e-02, eta: 0:16:24, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1822, loss_rpn_bbox: 0.0764, loss_cls: 0.4006, acc: 90.0137, loss_bbox: 0.3143, loss: 0.9735, grad_norm: 1.2480\n",
+-      "2021-08-15 12:36:17,173 - mmdet - INFO - Epoch [5][650/655]\tlr: 2.000e-02, eta: 0:16:14, time: 0.213, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1890, loss_rpn_bbox: 0.0803, loss_cls: 0.4153, acc: 89.6689, loss_bbox: 0.3290, loss: 1.0136, grad_norm: 1.2516\n",
+-      "2021-08-15 12:36:18,229 - mmdet - INFO - Saving checkpoint at 5 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 35.3 task/s, elapsed: 19s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:36:38,106 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.03s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=3.52s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:36:42,923 - mmdet - INFO - Epoch(val) [5][655]\tbbox_mAP: 0.0170, bbox_mAP_50: 0.0440, bbox_mAP_75: 0.0100, bbox_mAP_s: 0.0030, bbox_mAP_m: 0.0120, bbox_mAP_l: 0.0420, bbox_mAP_copypaste: 0.017 0.044 0.010 0.003 0.012 0.042\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=0.72s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.017\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.044\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.010\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.003\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.012\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.042\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.068\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.068\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.068\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.008\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.037\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.180\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:36:55,580 - mmdet - INFO - Epoch [6][50/655]\tlr: 2.000e-02, eta: 0:16:03, time: 0.253, data_time: 0.050, memory: 2100, loss_rpn_cls: 0.1764, loss_rpn_bbox: 0.0716, loss_cls: 0.3662, acc: 90.7295, loss_bbox: 0.2954, loss: 0.9096, grad_norm: 1.2196\n",
+-      "2021-08-15 12:37:06,213 - mmdet - INFO - Epoch [6][100/655]\tlr: 2.000e-02, eta: 0:15:53, time: 0.213, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1900, loss_rpn_bbox: 0.0803, loss_cls: 0.4092, acc: 89.6982, loss_bbox: 0.3214, loss: 1.0008, grad_norm: 1.2967\n",
+-      "2021-08-15 12:37:16,624 - mmdet - INFO - Epoch [6][150/655]\tlr: 2.000e-02, eta: 0:15:42, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1820, loss_rpn_bbox: 0.0769, loss_cls: 0.4246, acc: 89.2686, loss_bbox: 0.3393, loss: 1.0227, grad_norm: 1.2178\n",
+-      "2021-08-15 12:37:27,063 - mmdet - INFO - Epoch [6][200/655]\tlr: 2.000e-02, eta: 0:15:31, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.2108, loss_rpn_bbox: 0.0823, loss_cls: 0.4092, acc: 89.6904, loss_bbox: 0.3251, loss: 1.0274, grad_norm: 1.2745\n",
+-      "2021-08-15 12:37:37,248 - mmdet - INFO - Epoch [6][250/655]\tlr: 2.000e-02, eta: 0:15:20, time: 0.204, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1689, loss_rpn_bbox: 0.0683, loss_cls: 0.3800, acc: 90.1377, loss_bbox: 0.3107, loss: 0.9279, grad_norm: 1.1747\n",
+-      "2021-08-15 12:37:47,602 - mmdet - INFO - Epoch [6][300/655]\tlr: 2.000e-02, eta: 0:15:09, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1769, loss_rpn_bbox: 0.0722, loss_cls: 0.3857, acc: 90.2354, loss_bbox: 0.3138, loss: 0.9486, grad_norm: 1.1976\n",
+-      "2021-08-15 12:37:58,038 - mmdet - INFO - Epoch [6][350/655]\tlr: 2.000e-02, eta: 0:14:58, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1728, loss_rpn_bbox: 0.0704, loss_cls: 0.4087, acc: 89.3232, loss_bbox: 0.3373, loss: 0.9893, grad_norm: 1.1844\n",
+-      "2021-08-15 12:38:08,484 - mmdet - INFO - Epoch [6][400/655]\tlr: 2.000e-02, eta: 0:14:47, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1772, loss_rpn_bbox: 0.0726, loss_cls: 0.4040, acc: 89.6475, loss_bbox: 0.3304, loss: 0.9843, grad_norm: 1.2683\n",
+-      "2021-08-15 12:38:18,861 - mmdet - INFO - Epoch [6][450/655]\tlr: 2.000e-02, eta: 0:14:36, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1891, loss_rpn_bbox: 0.0816, loss_cls: 0.4266, acc: 88.5732, loss_bbox: 0.3679, loss: 1.0652, grad_norm: 1.3088\n",
+-      "2021-08-15 12:38:29,210 - mmdet - INFO - Epoch [6][500/655]\tlr: 2.000e-02, eta: 0:14:25, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1742, loss_rpn_bbox: 0.0718, loss_cls: 0.3745, acc: 90.2529, loss_bbox: 0.3088, loss: 0.9293, grad_norm: 1.2998\n",
+-      "2021-08-15 12:38:39,751 - mmdet - INFO - Epoch [6][550/655]\tlr: 2.000e-02, eta: 0:14:15, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1854, loss_rpn_bbox: 0.0781, loss_cls: 0.3935, acc: 89.7334, loss_bbox: 0.3256, loss: 0.9826, grad_norm: 1.3119\n",
+-      "2021-08-15 12:38:50,212 - mmdet - INFO - Epoch [6][600/655]\tlr: 2.000e-02, eta: 0:14:04, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1706, loss_rpn_bbox: 0.0777, loss_cls: 0.4022, acc: 89.6094, loss_bbox: 0.3321, loss: 0.9827, grad_norm: 1.2767\n",
+-      "2021-08-15 12:39:00,681 - mmdet - INFO - Epoch [6][650/655]\tlr: 2.000e-02, eta: 0:13:53, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1758, loss_rpn_bbox: 0.0763, loss_cls: 0.4204, acc: 89.1045, loss_bbox: 0.3477, loss: 1.0203, grad_norm: 1.2833\n",
+-      "2021-08-15 12:39:01,725 - mmdet - INFO - Saving checkpoint at 6 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 35.4 task/s, elapsed: 19s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:39:22,260 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.43s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=5.60s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:39:29,719 - mmdet - INFO - Epoch(val) [6][655]\tbbox_mAP: 0.0230, bbox_mAP_50: 0.0590, bbox_mAP_75: 0.0130, bbox_mAP_s: 0.0040, bbox_mAP_m: 0.0230, bbox_mAP_l: 0.0510, bbox_mAP_copypaste: 0.023 0.059 0.013 0.004 0.023 0.051\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=1.18s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.023\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.059\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.013\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.004\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.023\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.051\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.098\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.098\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.098\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.012\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.073\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.224\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:39:42,489 - mmdet - INFO - Epoch [7][50/655]\tlr: 2.000e-02, eta: 0:13:43, time: 0.255, data_time: 0.050, memory: 2100, loss_rpn_cls: 0.1824, loss_rpn_bbox: 0.0785, loss_cls: 0.4128, acc: 88.9062, loss_bbox: 0.3480, loss: 1.0217, grad_norm: 1.4073\n",
+-      "2021-08-15 12:39:53,505 - mmdet - INFO - Epoch [7][100/655]\tlr: 2.000e-02, eta: 0:13:33, time: 0.220, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1575, loss_rpn_bbox: 0.0738, loss_cls: 0.3784, acc: 89.9590, loss_bbox: 0.3167, loss: 0.9264, grad_norm: 1.2300\n",
+-      "2021-08-15 12:40:04,286 - mmdet - INFO - Epoch [7][150/655]\tlr: 2.000e-02, eta: 0:13:22, time: 0.216, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1681, loss_rpn_bbox: 0.0705, loss_cls: 0.4195, acc: 89.2256, loss_bbox: 0.3365, loss: 0.9946, grad_norm: 1.3451\n",
+-      "2021-08-15 12:40:14,674 - mmdet - INFO - Epoch [7][200/655]\tlr: 2.000e-02, eta: 0:13:11, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1654, loss_rpn_bbox: 0.0796, loss_cls: 0.4078, acc: 89.7646, loss_bbox: 0.3178, loss: 0.9706, grad_norm: 1.3185\n",
+-      "2021-08-15 12:40:24,947 - mmdet - INFO - Epoch [7][250/655]\tlr: 2.000e-02, eta: 0:13:00, time: 0.205, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1688, loss_rpn_bbox: 0.0734, loss_cls: 0.4052, acc: 89.2773, loss_bbox: 0.3460, loss: 0.9934, grad_norm: 1.2930\n",
+-      "2021-08-15 12:40:35,177 - mmdet - INFO - Epoch [7][300/655]\tlr: 2.000e-02, eta: 0:12:49, time: 0.205, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1899, loss_rpn_bbox: 0.0739, loss_cls: 0.4108, acc: 89.3877, loss_bbox: 0.3289, loss: 1.0035, grad_norm: 1.3047\n",
+-      "2021-08-15 12:40:45,714 - mmdet - INFO - Epoch [7][350/655]\tlr: 2.000e-02, eta: 0:12:39, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1706, loss_rpn_bbox: 0.0735, loss_cls: 0.4026, acc: 89.2744, loss_bbox: 0.3458, loss: 0.9925, grad_norm: 1.2226\n",
+-      "2021-08-15 12:40:56,158 - mmdet - INFO - Epoch [7][400/655]\tlr: 2.000e-02, eta: 0:12:28, time: 0.209, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1622, loss_rpn_bbox: 0.0706, loss_cls: 0.3918, acc: 89.8623, loss_bbox: 0.3179, loss: 0.9426, grad_norm: 1.2848\n",
+-      "2021-08-15 12:41:06,484 - mmdet - INFO - Epoch [7][450/655]\tlr: 2.000e-02, eta: 0:12:17, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1826, loss_rpn_bbox: 0.0734, loss_cls: 0.4053, acc: 89.4922, loss_bbox: 0.3268, loss: 0.9881, grad_norm: 1.3136\n",
+-      "2021-08-15 12:41:17,257 - mmdet - INFO - Epoch [7][500/655]\tlr: 2.000e-02, eta: 0:12:07, time: 0.215, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1679, loss_rpn_bbox: 0.0808, loss_cls: 0.4174, acc: 89.2402, loss_bbox: 0.3374, loss: 1.0035, grad_norm: 1.1958\n",
+-      "2021-08-15 12:41:27,627 - mmdet - INFO - Epoch [7][550/655]\tlr: 2.000e-02, eta: 0:11:56, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1541, loss_rpn_bbox: 0.0608, loss_cls: 0.3746, acc: 90.1348, loss_bbox: 0.3173, loss: 0.9069, grad_norm: 1.2779\n",
+-      "2021-08-15 12:41:37,987 - mmdet - INFO - Epoch [7][600/655]\tlr: 2.000e-02, eta: 0:11:45, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1693, loss_rpn_bbox: 0.0775, loss_cls: 0.3972, acc: 89.5859, loss_bbox: 0.3334, loss: 0.9774, grad_norm: 1.3799\n",
+-      "2021-08-15 12:41:48,325 - mmdet - INFO - Epoch [7][650/655]\tlr: 2.000e-02, eta: 0:11:34, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1699, loss_rpn_bbox: 0.0758, loss_cls: 0.4036, acc: 89.4531, loss_bbox: 0.3344, loss: 0.9838, grad_norm: 1.3035\n",
+-      "2021-08-15 12:41:49,367 - mmdet - INFO - Saving checkpoint at 7 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 35.8 task/s, elapsed: 18s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:42:09,135 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.42s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=4.62s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:42:15,750 - mmdet - INFO - Epoch(val) [7][655]\tbbox_mAP: 0.0240, bbox_mAP_50: 0.0590, bbox_mAP_75: 0.0140, bbox_mAP_s: 0.0050, bbox_mAP_m: 0.0250, bbox_mAP_l: 0.0540, bbox_mAP_copypaste: 0.024 0.059 0.014 0.005 0.025 0.054\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=0.99s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.024\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.059\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.014\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.005\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.025\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.054\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.090\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.090\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.090\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.010\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.056\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.215\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:42:28,600 - mmdet - INFO - Epoch [8][50/655]\tlr: 2.000e-02, eta: 0:11:24, time: 0.257, data_time: 0.050, memory: 2100, loss_rpn_cls: 0.1525, loss_rpn_bbox: 0.0679, loss_cls: 0.3790, acc: 89.9443, loss_bbox: 0.3186, loss: 0.9180, grad_norm: 1.2161\n",
+-      "2021-08-15 12:42:39,209 - mmdet - INFO - Epoch [8][100/655]\tlr: 2.000e-02, eta: 0:11:13, time: 0.212, data_time: 0.007, memory: 2100, loss_rpn_cls: 0.1775, loss_rpn_bbox: 0.0774, loss_cls: 0.4101, acc: 89.4512, loss_bbox: 0.3345, loss: 0.9995, grad_norm: 1.3599\n",
+-      "2021-08-15 12:42:49,599 - mmdet - INFO - Epoch [8][150/655]\tlr: 2.000e-02, eta: 0:11:02, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1766, loss_rpn_bbox: 0.0667, loss_cls: 0.3919, acc: 89.7764, loss_bbox: 0.3194, loss: 0.9546, grad_norm: 1.3244\n",
+-      "2021-08-15 12:42:59,835 - mmdet - INFO - Epoch [8][200/655]\tlr: 2.000e-02, eta: 0:10:51, time: 0.205, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1535, loss_rpn_bbox: 0.0652, loss_cls: 0.3619, acc: 90.4434, loss_bbox: 0.2956, loss: 0.8762, grad_norm: 1.1629\n",
+-      "2021-08-15 12:43:10,183 - mmdet - INFO - Epoch [8][250/655]\tlr: 2.000e-02, eta: 0:10:41, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1700, loss_rpn_bbox: 0.0789, loss_cls: 0.4156, acc: 88.7012, loss_bbox: 0.3511, loss: 1.0156, grad_norm: 1.3627\n",
+-      "2021-08-15 12:43:20,483 - mmdet - INFO - Epoch [8][300/655]\tlr: 2.000e-02, eta: 0:10:30, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1682, loss_rpn_bbox: 0.0731, loss_cls: 0.4041, acc: 89.6113, loss_bbox: 0.3214, loss: 0.9668, grad_norm: 1.3513\n",
+-      "2021-08-15 12:43:30,767 - mmdet - INFO - Epoch [8][350/655]\tlr: 2.000e-02, eta: 0:10:19, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1629, loss_rpn_bbox: 0.0755, loss_cls: 0.4089, acc: 89.1250, loss_bbox: 0.3447, loss: 0.9920, grad_norm: 1.2481\n",
+-      "2021-08-15 12:43:41,266 - mmdet - INFO - Epoch [8][400/655]\tlr: 2.000e-02, eta: 0:10:08, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1468, loss_rpn_bbox: 0.0641, loss_cls: 0.3929, acc: 89.6182, loss_bbox: 0.3266, loss: 0.9304, grad_norm: 1.2996\n",
+-      "2021-08-15 12:43:51,603 - mmdet - INFO - Epoch [8][450/655]\tlr: 2.000e-02, eta: 0:09:58, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1497, loss_rpn_bbox: 0.0635, loss_cls: 0.4138, acc: 89.2119, loss_bbox: 0.3420, loss: 0.9689, grad_norm: 1.3387\n",
+-      "2021-08-15 12:44:01,915 - mmdet - INFO - Epoch [8][500/655]\tlr: 2.000e-02, eta: 0:09:47, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1646, loss_rpn_bbox: 0.0770, loss_cls: 0.4143, acc: 89.2354, loss_bbox: 0.3332, loss: 0.9892, grad_norm: 1.2746\n",
+-      "2021-08-15 12:44:12,412 - mmdet - INFO - Epoch [8][550/655]\tlr: 2.000e-02, eta: 0:09:36, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1658, loss_rpn_bbox: 0.0750, loss_cls: 0.3906, acc: 89.6396, loss_bbox: 0.3234, loss: 0.9548, grad_norm: 1.2955\n",
+-      "2021-08-15 12:44:22,829 - mmdet - INFO - Epoch [8][600/655]\tlr: 2.000e-02, eta: 0:09:26, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1854, loss_rpn_bbox: 0.0919, loss_cls: 0.4187, acc: 88.8721, loss_bbox: 0.3460, loss: 1.0420, grad_norm: 1.3690\n",
+-      "2021-08-15 12:44:33,195 - mmdet - INFO - Epoch [8][650/655]\tlr: 2.000e-02, eta: 0:09:15, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1464, loss_rpn_bbox: 0.0712, loss_cls: 0.4026, acc: 89.3408, loss_bbox: 0.3401, loss: 0.9604, grad_norm: 1.2474\n",
+-      "2021-08-15 12:44:34,231 - mmdet - INFO - Saving checkpoint at 8 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 35.3 task/s, elapsed: 19s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:44:54,216 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.04s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=4.24s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:44:59,814 - mmdet - INFO - Epoch(val) [8][655]\tbbox_mAP: 0.0290, bbox_mAP_50: 0.0690, bbox_mAP_75: 0.0220, bbox_mAP_s: 0.0080, bbox_mAP_m: 0.0220, bbox_mAP_l: 0.0670, bbox_mAP_copypaste: 0.029 0.069 0.022 0.008 0.022 0.067\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=0.81s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.029\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.069\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.022\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.008\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.022\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.067\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.093\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.093\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.093\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.017\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.065\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.209\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:45:12,379 - mmdet - INFO - Epoch [9][50/655]\tlr: 2.000e-03, eta: 0:09:04, time: 0.251, data_time: 0.049, memory: 2100, loss_rpn_cls: 0.1385, loss_rpn_bbox: 0.0695, loss_cls: 0.4095, acc: 89.0859, loss_bbox: 0.3427, loss: 0.9601, grad_norm: 1.2280\n",
+-      "2021-08-15 12:45:22,595 - mmdet - INFO - Epoch [9][100/655]\tlr: 2.000e-03, eta: 0:08:53, time: 0.204, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1238, loss_rpn_bbox: 0.0602, loss_cls: 0.3552, acc: 90.3457, loss_bbox: 0.3017, loss: 0.8409, grad_norm: 1.1521\n",
+-      "2021-08-15 12:45:32,755 - mmdet - INFO - Epoch [9][150/655]\tlr: 2.000e-03, eta: 0:08:42, time: 0.203, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1252, loss_rpn_bbox: 0.0605, loss_cls: 0.3833, acc: 89.7236, loss_bbox: 0.3230, loss: 0.8920, grad_norm: 1.2295\n",
+-      "2021-08-15 12:45:43,059 - mmdet - INFO - Epoch [9][200/655]\tlr: 2.000e-03, eta: 0:08:32, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1460, loss_rpn_bbox: 0.0674, loss_cls: 0.3720, acc: 89.9189, loss_bbox: 0.3225, loss: 0.9080, grad_norm: 1.1879\n",
+-      "2021-08-15 12:45:53,657 - mmdet - INFO - Epoch [9][250/655]\tlr: 2.000e-03, eta: 0:08:21, time: 0.212, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1310, loss_rpn_bbox: 0.0631, loss_cls: 0.3917, acc: 89.5107, loss_bbox: 0.3315, loss: 0.9174, grad_norm: 1.1909\n",
+-      "2021-08-15 12:46:03,936 - mmdet - INFO - Epoch [9][300/655]\tlr: 2.000e-03, eta: 0:08:10, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1345, loss_rpn_bbox: 0.0638, loss_cls: 0.3882, acc: 89.2002, loss_bbox: 0.3467, loss: 0.9332, grad_norm: 1.2446\n",
+-      "2021-08-15 12:46:14,258 - mmdet - INFO - Epoch [9][350/655]\tlr: 2.000e-03, eta: 0:08:00, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1309, loss_rpn_bbox: 0.0607, loss_cls: 0.3675, acc: 89.5566, loss_bbox: 0.3331, loss: 0.8923, grad_norm: 1.2135\n",
+-      "2021-08-15 12:46:24,666 - mmdet - INFO - Epoch [9][400/655]\tlr: 2.000e-03, eta: 0:07:49, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1434, loss_rpn_bbox: 0.0705, loss_cls: 0.4057, acc: 88.6504, loss_bbox: 0.3620, loss: 0.9816, grad_norm: 1.3854\n",
+-      "2021-08-15 12:46:34,968 - mmdet - INFO - Epoch [9][450/655]\tlr: 2.000e-03, eta: 0:07:38, time: 0.206, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1409, loss_rpn_bbox: 0.0676, loss_cls: 0.3907, acc: 89.3086, loss_bbox: 0.3340, loss: 0.9332, grad_norm: 1.2583\n",
+-      "2021-08-15 12:46:45,201 - mmdet - INFO - Epoch [9][500/655]\tlr: 2.000e-03, eta: 0:07:28, time: 0.205, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1399, loss_rpn_bbox: 0.0610, loss_cls: 0.3897, acc: 89.3135, loss_bbox: 0.3407, loss: 0.9313, grad_norm: 1.2559\n",
+-      "2021-08-15 12:46:55,476 - mmdet - INFO - Epoch [9][550/655]\tlr: 2.000e-03, eta: 0:07:17, time: 0.205, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1421, loss_rpn_bbox: 0.0706, loss_cls: 0.4083, acc: 88.9502, loss_bbox: 0.3505, loss: 0.9715, grad_norm: 1.2802\n",
+-      "2021-08-15 12:47:05,861 - mmdet - INFO - Epoch [9][600/655]\tlr: 2.000e-03, eta: 0:07:06, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1452, loss_rpn_bbox: 0.0753, loss_cls: 0.4054, acc: 88.5693, loss_bbox: 0.3696, loss: 0.9956, grad_norm: 1.3317\n",
+-      "2021-08-15 12:47:16,341 - mmdet - INFO - Epoch [9][650/655]\tlr: 2.000e-03, eta: 0:06:56, time: 0.210, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1499, loss_rpn_bbox: 0.0770, loss_cls: 0.4107, acc: 88.8984, loss_bbox: 0.3545, loss: 0.9922, grad_norm: 1.3678\n",
+-      "2021-08-15 12:47:17,395 - mmdet - INFO - Saving checkpoint at 9 epochs\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>] 655/655, 36.2 task/s, elapsed: 18s, ETA:     0s"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:47:37,356 - mmdet - INFO - Evaluating bbox...\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "Loading and preparing results...\n",
+-      "DONE (t=0.05s)\n",
+-      "creating index...\n",
+-      "index created!\n",
+-      "Running per image evaluation...\n",
+-      "Evaluate annotation type *bbox*\n",
+-      "DONE (t=5.07s).\n",
+-      "Accumulating evaluation results...\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:47:44,032 - mmdet - INFO - Epoch(val) [9][655]\tbbox_mAP: 0.0340, bbox_mAP_50: 0.0790, bbox_mAP_75: 0.0250, bbox_mAP_s: 0.0050, bbox_mAP_m: 0.0300, bbox_mAP_l: 0.0750, bbox_mAP_copypaste: 0.034 0.079 0.025 0.005 0.030 0.075\n"
+-     ]
+-    },
+-    {
+-     "name": "stdout",
+-     "output_type": "stream",
+-     "text": [
+-      "DONE (t=1.00s).\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.034\n",
+-      "Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.079\n",
+-      "Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.025\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.005\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.030\n",
+-      "Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.075\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.113\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.113\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.113\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.018\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.087\n",
+-      "Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.244\n"
+-     ]
+-    },
+-    {
+-     "name": "stderr",
+-     "output_type": "stream",
+-     "text": [
+-      "2021-08-15 12:47:56,642 - mmdet - INFO - Epoch [10][50/655]\tlr: 2.000e-03, eta: 0:06:44, time: 0.252, data_time: 0.050, memory: 2100, loss_rpn_cls: 0.1400, loss_rpn_bbox: 0.0678, loss_cls: 0.3866, acc: 89.4336, loss_bbox: 0.3299, loss: 0.9243, grad_norm: 1.3180\n",
+-      "2021-08-15 12:48:07,053 - mmdet - INFO - Epoch [10][100/655]\tlr: 2.000e-03, eta: 0:06:34, time: 0.208, data_time: 0.007, memory: 2100, loss_rpn_cls: 0.1264, loss_rpn_bbox: 0.0633, loss_cls: 0.3801, acc: 89.4619, loss_bbox: 0.3351, loss: 0.9049, grad_norm: 1.2889\n",
+-      "2021-08-15 12:48:17,467 - mmdet - INFO - Epoch [10][150/655]\tlr: 2.000e-03, eta: 0:06:23, time: 0.208, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1497, loss_rpn_bbox: 0.0717, loss_cls: 0.3983, acc: 88.9912, loss_bbox: 0.3449, loss: 0.9647, grad_norm: 1.3868\n",
+-      "2021-08-15 12:48:27,810 - mmdet - INFO - Epoch [10][200/655]\tlr: 2.000e-03, eta: 0:06:12, time: 0.207, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1257, loss_rpn_bbox: 0.0632, loss_cls: 0.3774, acc: 89.3281, loss_bbox: 0.3383, loss: 0.9047, grad_norm: 1.2777\n",
+-      "2021-08-15 12:48:38,486 - mmdet - INFO - Epoch [10][250/655]\tlr: 2.000e-03, eta: 0:06:02, time: 0.214, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1359, loss_rpn_bbox: 0.0661, loss_cls: 0.3720, acc: 89.6338, loss_bbox: 0.3267, loss: 0.9008, grad_norm: 1.3602\n",
+-      "2021-08-15 12:48:49,013 - mmdet - INFO - Epoch [10][300/655]\tlr: 2.000e-03, eta: 0:05:51, time: 0.211, data_time: 0.006, memory: 2100, loss_rpn_cls: 0.1309, loss_rpn_bbox: 0.0641, loss_cls: 0.3640, acc: 89.9521, loss_bbox: 0.3156, loss: 0.8746, grad_norm: 1.2649\n"
+-     ]
+-    },
+-    {
+-     "ename": "KeyboardInterrupt",
+-     "evalue": "",
+-     "output_type": "error",
+-     "traceback": [
+-      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+-      "\u001b[0;31mKeyboardInterrupt\u001b[0m                         Traceback (most recent call last)",
+-      "\u001b[0;32m/tmp/ipykernel_57974/991485170.py\u001b[0m in \u001b[0;36m<module>\u001b[0;34m\u001b[0m\n\u001b[0;32m----> 1\u001b[0;31m \u001b[0mtrain_detector\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mmodel\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mdatasets\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mcfg\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mdistributed\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;32mFalse\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mvalidate\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;32mTrue\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/apis/train.py\u001b[0m in \u001b[0;36mtrain_detector\u001b[0;34m(model, dataset, cfg, distributed, validate, timestamp, meta)\u001b[0m\n\u001b[1;32m    168\u001b[0m     \u001b[0;32melif\u001b[0m \u001b[0mcfg\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mload_from\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    169\u001b[0m         \u001b[0mrunner\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mload_checkpoint\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mcfg\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mload_from\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 170\u001b[0;31m     \u001b[0mrunner\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mrun\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdata_loaders\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mcfg\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mworkflow\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+-      "\u001b[0;32m~/anaconda3/envs/hyelin/lib/python3.7/site-packages/mmcv/runner/epoch_based_runner.py\u001b[0m in \u001b[0;36mrun\u001b[0;34m(self, data_loaders, workflow, max_epochs, **kwargs)\u001b[0m\n\u001b[1;32m    125\u001b[0m                     \u001b[0;32mif\u001b[0m \u001b[0mmode\u001b[0m \u001b[0;34m==\u001b[0m \u001b[0;34m'train'\u001b[0m \u001b[0;32mand\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mepoch\u001b[0m \u001b[0;34m>=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_max_epochs\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    126\u001b[0m                         \u001b[0;32mbreak\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 127\u001b[0;31m                     \u001b[0mepoch_runner\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdata_loaders\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mi\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    128\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    129\u001b[0m         \u001b[0mtime\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0msleep\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;36m1\u001b[0m\u001b[0;34m)\u001b[0m  \u001b[0;31m# wait for some hooks like loggers to finish\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m~/anaconda3/envs/hyelin/lib/python3.7/site-packages/mmcv/runner/epoch_based_runner.py\u001b[0m in \u001b[0;36mtrain\u001b[0;34m(self, data_loader, **kwargs)\u001b[0m\n\u001b[1;32m     48\u001b[0m             \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_inner_iter\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mi\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     49\u001b[0m             \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mcall_hook\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'before_train_iter'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 50\u001b[0;31m             \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mrun_iter\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdata_batch\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mtrain_mode\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;32mTrue\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     51\u001b[0m             \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mcall_hook\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m'after_train_iter'\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     52\u001b[0m             \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_iter\u001b[0m \u001b[0;34m+=\u001b[0m \u001b[0;36m1\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m~/anaconda3/envs/hyelin/lib/python3.7/site-packages/mmcv/runner/epoch_based_runner.py\u001b[0m in \u001b[0;36mrun_iter\u001b[0;34m(self, data_batch, train_mode, **kwargs)\u001b[0m\n\u001b[1;32m     28\u001b[0m         \u001b[0;32melif\u001b[0m \u001b[0mtrain_mode\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     29\u001b[0m             outputs = self.model.train_step(data_batch, self.optimizer,\n\u001b[0;32m---> 30\u001b[0;31m                                             **kwargs)\n\u001b[0m\u001b[1;32m     31\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     32\u001b[0m             \u001b[0moutputs\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmodel\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mval_step\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdata_batch\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0moptimizer\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m~/anaconda3/envs/hyelin/lib/python3.7/site-packages/mmcv/parallel/data_parallel.py\u001b[0m in \u001b[0;36mtrain_step\u001b[0;34m(self, *inputs, **kwargs)\u001b[0m\n\u001b[1;32m     65\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     66\u001b[0m         \u001b[0minputs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mkwargs\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mscatter\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0minputs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mkwargs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdevice_ids\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 67\u001b[0;31m         \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mmodule\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mtrain_step\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0minputs\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     68\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     69\u001b[0m     \u001b[0;32mdef\u001b[0m \u001b[0mval_step\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mself\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m*\u001b[0m\u001b[0minputs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/detectors/base.py\u001b[0m in \u001b[0;36mtrain_step\u001b[0;34m(self, data, optimizer)\u001b[0m\n\u001b[1;32m    235\u001b[0m                   \u001b[0maveraging\u001b[0m \u001b[0mthe\u001b[0m \u001b[0mlogs\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    236\u001b[0m         \"\"\"\n\u001b[0;32m--> 237\u001b[0;31m         \u001b[0mlosses\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m**\u001b[0m\u001b[0mdata\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    238\u001b[0m         \u001b[0mloss\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mlog_vars\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_parse_losses\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mlosses\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    239\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m~/anaconda3/envs/hyelin/lib/python3.7/site-packages/torch/nn/modules/module.py\u001b[0m in \u001b[0;36m_call_impl\u001b[0;34m(self, *input, **kwargs)\u001b[0m\n\u001b[1;32m    725\u001b[0m             \u001b[0mresult\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0m_slow_forward\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0minput\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    726\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 727\u001b[0;31m             \u001b[0mresult\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mforward\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0minput\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    728\u001b[0m         for hook in itertools.chain(\n\u001b[1;32m    729\u001b[0m                 \u001b[0m_global_forward_hooks\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mvalues\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m~/anaconda3/envs/hyelin/lib/python3.7/site-packages/mmcv/runner/fp16_utils.py\u001b[0m in \u001b[0;36mnew_func\u001b[0;34m(*args, **kwargs)\u001b[0m\n\u001b[1;32m     96\u001b[0m                                 'method of nn.Module')\n\u001b[1;32m     97\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0;34m(\u001b[0m\u001b[0mhasattr\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0margs\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m'fp16_enabled'\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mand\u001b[0m \u001b[0margs\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfp16_enabled\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 98\u001b[0;31m                 \u001b[0;32mreturn\u001b[0m \u001b[0mold_func\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0margs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     99\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    100\u001b[0m             \u001b[0;31m# get the arg spec of the decorated method\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/detectors/base.py\u001b[0m in \u001b[0;36mforward\u001b[0;34m(self, img, img_metas, return_loss, **kwargs)\u001b[0m\n\u001b[1;32m    169\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    170\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mreturn_loss\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 171\u001b[0;31m             \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mforward_train\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mimg\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mimg_metas\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    172\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    173\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mforward_test\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mimg\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mimg_metas\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/detectors/two_stage.py\u001b[0m in \u001b[0;36mforward_train\u001b[0;34m(self, img, img_metas, gt_bboxes, gt_labels, gt_bboxes_ignore, gt_masks, proposals, **kwargs)\u001b[0m\n\u001b[1;32m    138\u001b[0m                 \u001b[0mgt_labels\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0;32mNone\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    139\u001b[0m                 \u001b[0mgt_bboxes_ignore\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mgt_bboxes_ignore\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 140\u001b[0;31m                 proposal_cfg=proposal_cfg)\n\u001b[0m\u001b[1;32m    141\u001b[0m             \u001b[0mlosses\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mupdate\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mrpn_losses\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    142\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/dense_heads/base_dense_head.py\u001b[0m in \u001b[0;36mforward_train\u001b[0;34m(self, x, img_metas, gt_bboxes, gt_labels, gt_bboxes_ignore, proposal_cfg, **kwargs)\u001b[0m\n\u001b[1;32m     52\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     53\u001b[0m             \u001b[0mloss_inputs\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mouts\u001b[0m \u001b[0;34m+\u001b[0m \u001b[0;34m(\u001b[0m\u001b[0mgt_bboxes\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mgt_labels\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mimg_metas\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 54\u001b[0;31m         \u001b[0mlosses\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mloss\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0mloss_inputs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mgt_bboxes_ignore\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mgt_bboxes_ignore\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     55\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mproposal_cfg\u001b[0m \u001b[0;32mis\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     56\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0mlosses\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/dense_heads/rpn_head.py\u001b[0m in \u001b[0;36mloss\u001b[0;34m(self, cls_scores, bbox_preds, gt_bboxes, img_metas, gt_bboxes_ignore)\u001b[0m\n\u001b[1;32m     72\u001b[0m             \u001b[0;32mNone\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     73\u001b[0m             \u001b[0mimg_metas\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 74\u001b[0;31m             gt_bboxes_ignore=gt_bboxes_ignore)\n\u001b[0m\u001b[1;32m     75\u001b[0m         return dict(\n\u001b[1;32m     76\u001b[0m             loss_rpn_cls=losses['loss_cls'], loss_rpn_bbox=losses['loss_bbox'])\n",
+-      "\u001b[0;32m~/anaconda3/envs/hyelin/lib/python3.7/site-packages/mmcv/runner/fp16_utils.py\u001b[0m in \u001b[0;36mnew_func\u001b[0;34m(*args, **kwargs)\u001b[0m\n\u001b[1;32m    184\u001b[0m                                 'method of nn.Module')\n\u001b[1;32m    185\u001b[0m             \u001b[0;32mif\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0;34m(\u001b[0m\u001b[0mhasattr\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0margs\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m'fp16_enabled'\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mand\u001b[0m \u001b[0margs\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mfp16_enabled\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 186\u001b[0;31m                 \u001b[0;32mreturn\u001b[0m \u001b[0mold_func\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0margs\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m    187\u001b[0m             \u001b[0;31m# get the arg spec of the decorated method\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    188\u001b[0m             \u001b[0margs_info\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mgetfullargspec\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mold_func\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/dense_heads/anchor_head.py\u001b[0m in \u001b[0;36mloss\u001b[0;34m(self, cls_scores, bbox_preds, gt_bboxes, gt_labels, img_metas, gt_bboxes_ignore)\u001b[0m\n\u001b[1;32m    461\u001b[0m             \u001b[0mgt_bboxes_ignore_list\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mgt_bboxes_ignore\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    462\u001b[0m             \u001b[0mgt_labels_list\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mgt_labels\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 463\u001b[0;31m             label_channels=label_channels)\n\u001b[0m\u001b[1;32m    464\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0mcls_reg_targets\u001b[0m \u001b[0;32mis\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    465\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0;32mNone\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/dense_heads/anchor_head.py\u001b[0m in \u001b[0;36mget_targets\u001b[0;34m(self, anchor_list, valid_flag_list, gt_bboxes_list, img_metas, gt_bboxes_ignore_list, gt_labels_list, label_channels, unmap_outputs, return_sampling_results)\u001b[0m\n\u001b[1;32m    343\u001b[0m             \u001b[0mimg_metas\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    344\u001b[0m             \u001b[0mlabel_channels\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mlabel_channels\u001b[0m\u001b[0;34m,\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m--> 345\u001b[0;31m             unmap_outputs=unmap_outputs)\n\u001b[0m\u001b[1;32m    346\u001b[0m         (all_labels, all_label_weights, all_bbox_targets, all_bbox_weights,\n\u001b[1;32m    347\u001b[0m          pos_inds_list, neg_inds_list, sampling_results_list) = results[:7]\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/core/utils/misc.py\u001b[0m in \u001b[0;36mmulti_apply\u001b[0;34m(func, *args, **kwargs)\u001b[0m\n\u001b[1;32m     27\u001b[0m     \u001b[0mpfunc\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mpartial\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mfunc\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m**\u001b[0m\u001b[0mkwargs\u001b[0m\u001b[0;34m)\u001b[0m \u001b[0;32mif\u001b[0m \u001b[0mkwargs\u001b[0m \u001b[0;32melse\u001b[0m \u001b[0mfunc\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     28\u001b[0m     \u001b[0mmap_results\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mmap\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mpfunc\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0;34m*\u001b[0m\u001b[0margs\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 29\u001b[0;31m     \u001b[0;32mreturn\u001b[0m \u001b[0mtuple\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mmap\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mlist\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mzip\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m*\u001b[0m\u001b[0mmap_results\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     30\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     31\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/models/dense_heads/anchor_head.py\u001b[0m in \u001b[0;36m_get_targets_single\u001b[0;34m(self, flat_anchors, valid_flags, gt_bboxes, gt_bboxes_ignore, gt_labels, img_meta, label_channels, unmap_outputs)\u001b[0m\n\u001b[1;32m    219\u001b[0m             None if self.sampling else gt_labels)\n\u001b[1;32m    220\u001b[0m         sampling_result = self.sampler.sample(assign_result, anchors,\n\u001b[0;32m--> 221\u001b[0;31m                                               gt_bboxes)\n\u001b[0m\u001b[1;32m    222\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m    223\u001b[0m         \u001b[0mnum_valid_anchors\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0manchors\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mshape\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;36m0\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/core/bbox/samplers/base_sampler.py\u001b[0m in \u001b[0;36msample\u001b[0;34m(self, assign_result, bboxes, gt_bboxes, gt_labels, **kwargs)\u001b[0m\n\u001b[1;32m     94\u001b[0m                 \u001b[0mnum_expected_neg\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mneg_upper_bound\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     95\u001b[0m         neg_inds = self.neg_sampler._sample_neg(\n\u001b[0;32m---> 96\u001b[0;31m             assign_result, num_expected_neg, bboxes=bboxes, **kwargs)\n\u001b[0m\u001b[1;32m     97\u001b[0m         \u001b[0mneg_inds\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mneg_inds\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0munique\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     98\u001b[0m \u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/core/bbox/samplers/random_sampler.py\u001b[0m in \u001b[0;36m_sample_neg\u001b[0;34m(self, assign_result, num_expected, **kwargs)\u001b[0m\n\u001b[1;32m     79\u001b[0m             \u001b[0;32mreturn\u001b[0m \u001b[0mneg_inds\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     80\u001b[0m         \u001b[0;32melse\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 81\u001b[0;31m             \u001b[0;32mreturn\u001b[0m \u001b[0mself\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mrandom_choice\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mneg_inds\u001b[0m\u001b[0;34m,\u001b[0m \u001b[0mnum_expected\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m",
+-      "\u001b[0;32m/home/hyelin/mmdetection/mmdet/core/bbox/samplers/random_sampler.py\u001b[0m in \u001b[0;36mrandom_choice\u001b[0;34m(self, gallery, num)\u001b[0m\n\u001b[1;32m     55\u001b[0m         \u001b[0;31m# when PyTorch fixes the abnormal return of torch.randperm.\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     56\u001b[0m         \u001b[0;31m# See: https://github.com/open-mmlab/mmdetection/pull/5014\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0;32m---> 57\u001b[0;31m         \u001b[0mperm\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mtorch\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mrandperm\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mgallery\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mnumel\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0mnum\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mto\u001b[0m\u001b[0;34m(\u001b[0m\u001b[0mdevice\u001b[0m\u001b[0;34m=\u001b[0m\u001b[0mgallery\u001b[0m\u001b[0;34m.\u001b[0m\u001b[0mdevice\u001b[0m\u001b[0;34m)\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[0m\u001b[1;32m     58\u001b[0m         \u001b[0mrand_inds\u001b[0m \u001b[0;34m=\u001b[0m \u001b[0mgallery\u001b[0m\u001b[0;34m[\u001b[0m\u001b[0mperm\u001b[0m\u001b[0;34m]\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n\u001b[1;32m     59\u001b[0m         \u001b[0;32mif\u001b[0m \u001b[0;32mnot\u001b[0m \u001b[0mis_tensor\u001b[0m\u001b[0;34m:\u001b[0m\u001b[0;34m\u001b[0m\u001b[0;34m\u001b[0m\u001b[0m\n",
+-      "\u001b[0;31mKeyboardInterrupt\u001b[0m: "
++      "2021-09-16 14:39:57,378 - mmdet - INFO - Epoch [2][100/1221]\tlr: 2.000e-02, eta: 0:52:33, time: 0.238, data_time: 0.007, memory: 2449, loss_rpn_cls: 0.0690, loss_rpn_bbox: 0.0463, loss_cls: 0.3660, acc: 90.5518, loss_bbox: 0.2750, loss: 0.7564, grad_norm: 1.7947\n",
++      "2021-09-16 14:40:09,388 - mmdet - INFO - Epoch [2][150/1221]\tlr: 2.000e-02, eta: 0:52:22, time: 0.240, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0708, loss_rpn_bbox: 0.0427, loss_cls: 0.3481, acc: 90.7354, loss_bbox: 0.2653, loss: 0.7270, grad_norm: 1.7982\n",
++      "2021-09-16 14:40:20,873 - mmdet - INFO - Epoch [2][200/1221]\tlr: 2.000e-02, eta: 0:52:07, time: 0.230, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0753, loss_rpn_bbox: 0.0372, loss_cls: 0.3315, acc: 91.4971, loss_bbox: 0.2497, loss: 0.6937, grad_norm: 1.7816\n",
++      "2021-09-16 14:40:32,365 - mmdet - INFO - Epoch [2][250/1221]\tlr: 2.000e-02, eta: 0:51:53, time: 0.230, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0712, loss_rpn_bbox: 0.0371, loss_cls: 0.3189, acc: 91.8311, loss_bbox: 0.2311, loss: 0.6584, grad_norm: 1.8160\n",
++      "2021-09-16 14:40:44,148 - mmdet - INFO - Epoch [2][300/1221]\tlr: 2.000e-02, eta: 0:51:41, time: 0.236, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0676, loss_rpn_bbox: 0.0357, loss_cls: 0.3059, acc: 91.9697, loss_bbox: 0.2365, loss: 0.6456, grad_norm: 1.7500\n",
++      "2021-09-16 14:40:55,753 - mmdet - INFO - Epoch [2][350/1221]\tlr: 2.000e-02, eta: 0:51:27, time: 0.232, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0530, loss_rpn_bbox: 0.0315, loss_cls: 0.2732, acc: 92.5342, loss_bbox: 0.2068, loss: 0.5645, grad_norm: 1.5791\n",
++      "2021-09-16 14:41:07,393 - mmdet - INFO - Epoch [2][400/1221]\tlr: 2.000e-02, eta: 0:51:14, time: 0.233, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0807, loss_rpn_bbox: 0.0410, loss_cls: 0.3214, acc: 91.6416, loss_bbox: 0.2305, loss: 0.6735, grad_norm: 1.8070\n",
++      "2021-09-16 14:41:19,223 - mmdet - INFO - Epoch [2][450/1221]\tlr: 2.000e-02, eta: 0:51:02, time: 0.237, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0906, loss_rpn_bbox: 0.0434, loss_cls: 0.3171, acc: 91.3652, loss_bbox: 0.2503, loss: 0.7014, grad_norm: 1.8507\n",
++      "2021-09-16 14:41:31,014 - mmdet - INFO - Epoch [2][500/1221]\tlr: 2.000e-02, eta: 0:50:51, time: 0.236, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0723, loss_rpn_bbox: 0.0387, loss_cls: 0.3089, acc: 91.4824, loss_bbox: 0.2505, loss: 0.6704, grad_norm: 1.6975\n",
++      "2021-09-16 14:41:42,988 - mmdet - INFO - Epoch [2][550/1221]\tlr: 2.000e-02, eta: 0:50:40, time: 0.239, data_time: 0.006, memory: 2449, loss_rpn_cls: 0.0685, loss_rpn_bbox: 0.0357, loss_cls: 0.3156, acc: 91.8594, loss_bbox: 0.2300, loss: 0.6497, grad_norm: 1.7918\n"
+      ]
+     }
+    ],
+    "source": [
+-    "train_detector(model, datasets[0], cfg, distributed=False, validate=True)"
++    "# 모델 학습\n",
++    "train_detector(model, datasets[0], cfg, distributed=False, validate=False)"
+    ]
+-  },
+-  {
+-   "cell_type": "code",
+-   "execution_count": null,
+-   "metadata": {},
+-   "outputs": [],
+-   "source": []
+   }
+  ],
+  "metadata": {
+@@ -924,5 +1029,5 @@
+   }
+  },
+  "nbformat": 4,
+- "nbformat_minor": 2
++ "nbformat_minor": 4
+ }
