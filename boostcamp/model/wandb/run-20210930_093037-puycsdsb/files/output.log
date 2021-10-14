@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "tools/train.py", line 189, in <module>
+    main()
+  File "tools/train.py", line 185, in main
+    meta=meta)
+  File "/opt/conda/envs/detection/lib/python3.7/site-packages/mmdet/apis/train.py", line 174, in train_detector
+    runner.run(data_loaders, cfg.workflow)
+  File "/opt/conda/envs/detection/lib/python3.7/site-packages/mmcv/runner/epoch_based_runner.py", line 127, in run
+    epoch_runner(data_loaders[i], **kwargs)
+  File "/opt/conda/envs/detection/lib/python3.7/site-packages/mmcv/runner/epoch_based_runner.py", line 45, in train
+    self.call_hook('before_train_epoch')
+  File "/opt/conda/envs/detection/lib/python3.7/site-packages/mmcv/runner/base_runner.py", line 307, in call_hook
+    getattr(hook, fn_name)(self)
+  File "/opt/conda/envs/detection/lib/python3.7/site-packages/mmdet/datasets/utils.py", line 156, in before_train_epoch
+    self._check_head(runner)
+  File "/opt/conda/envs/detection/lib/python3.7/site-packages/mmdet/datasets/utils.py", line 143, in _check_head
+    (f'The `num_classes` ({module.num_classes}) in '
+AssertionError: The `num_classes` (80) in Shared2FCBBoxHead of MMDataParallel does not matches the length of `CLASSES` 10) in CocoDataset

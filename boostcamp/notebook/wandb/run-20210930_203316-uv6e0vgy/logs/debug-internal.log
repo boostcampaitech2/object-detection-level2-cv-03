@@ -1,0 +1,164 @@
+2021-09-30 20:33:17,181 INFO    MainThread:31466 [internal.py:wandb_internal():89] W&B internal server running at pid: 31466, started at: 2021-09-30 20:33:17.181442
+2021-09-30 20:33:17,184 DEBUG   SenderThread:31466 [sender.py:send():185] send: header
+2021-09-30 20:33:17,184 INFO    WriterThread:31466 [datastore.py:open_for_write():77] open: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/run-uv6e0vgy.wandb
+2021-09-30 20:33:17,185 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: check_version
+2021-09-30 20:33:17,185 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: check_version
+2021-09-30 20:33:17,218 DEBUG   SenderThread:31466 [sender.py:send():185] send: run
+2021-09-30 20:33:17,450 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: run_start
+2021-09-30 20:33:17,450 INFO    SenderThread:31466 [dir_watcher.py:__init__():169] watching files in: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files
+2021-09-30 20:33:17,451 INFO    SenderThread:31466 [sender.py:_start_run_threads():749] run started: uv6e0vgy with start time 1633033996
+2021-09-30 20:33:17,451 DEBUG   SenderThread:31466 [sender.py:send():185] send: summary
+2021-09-30 20:33:17,451 INFO    SenderThread:31466 [sender.py:_save_file():879] saving file wandb-summary.json with policy end
+2021-09-30 20:33:17,458 DEBUG   HandlerThread:31466 [meta.py:__init__():40] meta init
+2021-09-30 20:33:17,459 DEBUG   HandlerThread:31466 [meta.py:__init__():54] meta init done
+2021-09-30 20:33:17,459 DEBUG   HandlerThread:31466 [meta.py:probe():211] probe
+2021-09-30 20:33:17,466 DEBUG   HandlerThread:31466 [meta.py:_setup_git():201] setup git
+2021-09-30 20:33:17,481 DEBUG   HandlerThread:31466 [meta.py:_setup_git():208] setup git done
+2021-09-30 20:33:17,482 DEBUG   HandlerThread:31466 [meta.py:_save_code():90] save code
+2021-09-30 20:33:17,482 WARNING HandlerThread:31466 [meta.py:_save_code():92] unable to save code -- program entry not found
+2021-09-30 20:33:17,482 DEBUG   HandlerThread:31466 [meta.py:_save_patches():128] save patches
+2021-09-30 20:33:17,640 DEBUG   HandlerThread:31466 [meta.py:_save_patches():170] save patches done
+2021-09-30 20:33:17,640 DEBUG   HandlerThread:31466 [meta.py:_save_pip():58] save pip
+2021-09-30 20:33:17,641 DEBUG   HandlerThread:31466 [meta.py:_save_pip():72] save pip done
+2021-09-30 20:33:17,641 DEBUG   HandlerThread:31466 [meta.py:_save_conda():79] save conda
+2021-09-30 20:33:18,451 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_created():217] file/dir created: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/diff.patch
+2021-09-30 20:33:18,452 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_created():217] file/dir created: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/requirements.txt
+2021-09-30 20:33:18,452 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_created():217] file/dir created: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/conda-environment.yaml
+2021-09-30 20:33:18,452 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_created():217] file/dir created: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/upstream_diff_053f2b6285b11a9f5f565ff52ad84fb07132ae2a.patch
+2021-09-30 20:33:18,452 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_created():217] file/dir created: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/wandb-summary.json
+2021-09-30 20:33:23,452 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_created():217] file/dir created: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/output.log
+2021-09-30 20:33:26,453 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_modified():230] file/dir modified: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/conda-environment.yaml
+2021-09-30 20:33:26,483 DEBUG   HandlerThread:31466 [meta.py:_save_conda():87] save conda done
+2021-09-30 20:33:26,484 DEBUG   HandlerThread:31466 [meta.py:probe():249] probe done
+2021-09-30 20:33:26,568 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: stop_status
+2021-09-30 20:33:26,569 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: stop_status
+2021-09-30 20:33:26,572 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: pause
+2021-09-30 20:33:26,572 INFO    HandlerThread:31466 [handler.py:handle_request_pause():567] stopping system metrics thread
+2021-09-30 20:33:26,759 DEBUG   SenderThread:31466 [sender.py:send():185] send: files
+2021-09-30 20:33:26,760 INFO    SenderThread:31466 [sender.py:_save_file():879] saving file wandb-metadata.json with policy now
+2021-09-30 20:33:26,760 INFO    SenderThread:31466 [sender.py:_save_file():879] saving file diff.patch with policy now
+2021-09-30 20:33:26,760 INFO    SenderThread:31466 [sender.py:_save_file():879] saving file upstream_diff_053f2b6285b11a9f5f565ff52ad84fb07132ae2a.patch with policy now
+2021-09-30 20:33:26,761 DEBUG   SenderThread:31466 [sender.py:send():185] send: stats
+2021-09-30 20:33:27,423 INFO    Thread-11 :31466 [upload_job.py:push():137] Uploaded file /tmp/tmpdtkiri28wandb/1vyxfcyg-wandb-metadata.json
+2021-09-30 20:33:27,454 INFO    Thread-8  :31466 [dir_watcher.py:_on_file_created():217] file/dir created: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/wandb-metadata.json
+2021-09-30 20:33:27,511 INFO    Thread-12 :31466 [upload_job.py:push():137] Uploaded file /tmp/tmpdtkiri28wandb/2achc8bh-diff.patch
+2021-09-30 20:33:27,730 INFO    Thread-13 :31466 [upload_job.py:push():137] Uploaded file /tmp/tmpdtkiri28wandb/16pfh5sv-upstream_diff_053f2b6285b11a9f5f565ff52ad84fb07132ae2a.patch
+2021-09-30 20:33:41,760 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: stop_status
+2021-09-30 20:33:41,760 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: stop_status
+2021-09-30 20:33:56,959 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: stop_status
+2021-09-30 20:33:56,959 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: stop_status
+2021-09-30 20:33:58,442 WARNING MainThread:31466 [internal.py:wandb_internal():145] Internal process interrupt: 1
+2021-09-30 20:33:58,701 DEBUG   SenderThread:31466 [sender.py:send():185] send: telemetry
+2021-09-30 20:33:58,701 DEBUG   SenderThread:31466 [sender.py:send():185] send: exit
+2021-09-30 20:33:58,701 INFO    SenderThread:31466 [sender.py:send_exit():294] handling exit code: 0
+2021-09-30 20:33:58,701 INFO    SenderThread:31466 [sender.py:send_exit():296] handling runtime: 9
+2021-09-30 20:33:58,701 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:58,704 INFO    SenderThread:31466 [sender.py:_save_file():879] saving file wandb-summary.json with policy end
+2021-09-30 20:33:58,704 INFO    SenderThread:31466 [sender.py:send_exit():306] send defer
+2021-09-30 20:33:58,704 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:33:58,705 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:33:58,705 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 0
+2021-09-30 20:33:58,705 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:33:58,705 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 0
+2021-09-30 20:33:58,705 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 1
+2021-09-30 20:33:58,705 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:33:58,706 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 1
+2021-09-30 20:33:58,706 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:33:58,706 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 1
+2021-09-30 20:33:58,706 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 2
+2021-09-30 20:33:58,706 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:33:58,706 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 2
+2021-09-30 20:33:58,706 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:33:58,706 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 2
+2021-09-30 20:33:58,706 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 3
+2021-09-30 20:33:58,707 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:33:58,707 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 3
+2021-09-30 20:33:58,707 DEBUG   SenderThread:31466 [sender.py:send():185] send: summary
+2021-09-30 20:33:58,707 INFO    SenderThread:31466 [sender.py:_save_file():879] saving file wandb-summary.json with policy end
+2021-09-30 20:33:58,707 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:33:58,707 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 3
+2021-09-30 20:33:58,707 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 4
+2021-09-30 20:33:58,708 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:33:58,708 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 4
+2021-09-30 20:33:58,708 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:33:58,708 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 4
+2021-09-30 20:33:58,810 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:58,921 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 5
+2021-09-30 20:33:58,921 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:33:58,922 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:33:58,922 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 5
+2021-09-30 20:33:58,922 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:33:58,922 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 5
+2021-09-30 20:33:58,922 INFO    SenderThread:31466 [dir_watcher.py:finish():283] shutting down directory watcher
+2021-09-30 20:33:59,023 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:59,460 INFO    SenderThread:31466 [dir_watcher.py:_on_file_modified():230] file/dir modified: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/config.yaml
+2021-09-30 20:33:59,461 INFO    SenderThread:31466 [dir_watcher.py:_on_file_modified():230] file/dir modified: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/wandb-summary.json
+2021-09-30 20:33:59,461 INFO    SenderThread:31466 [dir_watcher.py:finish():313] scan: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files
+2021-09-30 20:33:59,461 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/wandb-metadata.json wandb-metadata.json
+2021-09-30 20:33:59,461 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/diff.patch diff.patch
+2021-09-30 20:33:59,461 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/wandb-summary.json wandb-summary.json
+2021-09-30 20:33:59,461 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/config.yaml config.yaml
+2021-09-30 20:33:59,462 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/requirements.txt requirements.txt
+2021-09-30 20:33:59,466 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/output.log output.log
+2021-09-30 20:33:59,466 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/conda-environment.yaml conda-environment.yaml
+2021-09-30 20:33:59,469 INFO    SenderThread:31466 [dir_watcher.py:finish():327] scan save: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/upstream_diff_053f2b6285b11a9f5f565ff52ad84fb07132ae2a.patch upstream_diff_053f2b6285b11a9f5f565ff52ad84fb07132ae2a.patch
+2021-09-30 20:33:59,469 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 6
+2021-09-30 20:33:59,470 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:33:59,479 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:33:59,479 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 6
+2021-09-30 20:33:59,480 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:33:59,480 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 6
+2021-09-30 20:33:59,480 INFO    SenderThread:31466 [file_pusher.py:finish():177] shutting down file pusher
+2021-09-30 20:33:59,576 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:59,576 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:33:59,679 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:59,679 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:33:59,780 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:59,781 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:33:59,882 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:59,882 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:33:59,985 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:33:59,985 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:00,087 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:34:00,087 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:00,132 INFO    Thread-14 :31466 [upload_job.py:push():137] Uploaded file /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/wandb-summary.json
+2021-09-30 20:34:00,146 INFO    Thread-17 :31466 [upload_job.py:push():137] Uploaded file /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/conda-environment.yaml
+2021-09-30 20:34:00,189 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:34:00,189 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:00,200 INFO    Thread-16 :31466 [upload_job.py:push():137] Uploaded file /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/requirements.txt
+2021-09-30 20:34:00,291 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:34:00,292 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:00,394 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:34:00,394 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:00,452 INFO    Thread-15 :31466 [upload_job.py:push():137] Uploaded file /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/files/config.yaml
+2021-09-30 20:34:00,496 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:34:00,496 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:00,598 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:34:00,598 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:00,653 INFO    Thread-7  :31466 [sender.py:transition_state():319] send defer: 7
+2021-09-30 20:34:00,654 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:34:00,654 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 7
+2021-09-30 20:34:00,654 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:34:00,654 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 7
+2021-09-30 20:34:00,700 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: poll_exit
+2021-09-30 20:34:01,022 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 8
+2021-09-30 20:34:01,022 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: poll_exit
+2021-09-30 20:34:01,023 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:34:01,023 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 8
+2021-09-30 20:34:01,023 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:34:01,023 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 8
+2021-09-30 20:34:01,023 INFO    SenderThread:31466 [sender.py:transition_state():319] send defer: 9
+2021-09-30 20:34:01,024 DEBUG   SenderThread:31466 [sender.py:send():185] send: final
+2021-09-30 20:34:01,024 DEBUG   SenderThread:31466 [sender.py:send():185] send: footer
+2021-09-30 20:34:01,024 DEBUG   HandlerThread:31466 [handler.py:handle_request():126] handle_request: defer
+2021-09-30 20:34:01,024 INFO    HandlerThread:31466 [handler.py:handle_request_defer():143] handle defer: 9
+2021-09-30 20:34:01,024 DEBUG   SenderThread:31466 [sender.py:send_request():199] send_request: defer
+2021-09-30 20:34:01,024 INFO    SenderThread:31466 [sender.py:send_request_defer():315] handle sender defer: 9
+2021-09-30 20:34:06,450 WARNING MainThread:31466 [internal.py:is_dead():365] Internal process exiting, parent pid 31365 disappeared
+2021-09-30 20:34:06,451 ERROR   MainThread:31466 [internal.py:wandb_internal():141] Internal process shutdown.
+2021-09-30 20:34:07,025 INFO    WriterThread:31466 [datastore.py:close():281] close: /opt/ml/detection/mmdetection/boostcamp/notebook/wandb/run-20210930_203316-uv6e0vgy/run-uv6e0vgy.wandb
+2021-09-30 20:34:07,025 INFO    SenderThread:31466 [sender.py:finish():985] shutting down sender
+2021-09-30 20:34:07,026 INFO    SenderThread:31466 [file_pusher.py:finish():177] shutting down file pusher
+2021-09-30 20:34:07,026 INFO    SenderThread:31466 [file_pusher.py:join():182] waiting for file pusher
+2021-09-30 20:34:07,031 INFO    HandlerThread:31466 [handler.py:finish():683] shutting down handler
+2021-09-30 20:34:07,032 INFO    MainThread:31466 [internal.py:handle_exit():76] Internal process exited
