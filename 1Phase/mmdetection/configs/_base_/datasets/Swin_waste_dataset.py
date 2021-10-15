@@ -1,25 +1,15 @@
 dataset_type = 'CocoDataset'
-# data_root = '/home/hci/Videos/datasetBGAug/'
-# data_root = '/home/hci/Videos/archive/dataset/'
 data_root = '/opt/ml/detection/dataset/'
-# data_root = '/opt/ml/detection/Augmented/datasetMixBgAug3406/'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
 size_min = 512
-# size_max = 1024
-size_max = 1024 - 32
+size_max = 1024
 
-multi_scale_list = [(x,x) for x in range(size_min, size_max+1, 32)]
+multi_scale = [(x,x) for x in range(size_min, size_max+1, 32)]
 
-multi_scale_list_light = (512,512)
-# multi_scale_list_light = [(x,x) for x in range(size_min, size_max+1, 256)]
-
-# multi_scale_dict = []
-# for w in range(512,size_max+1,32):
-#     for h in range(512,size_max+1,32):
-#         multi_scale_dict.append(dict(type='Resize', height=h, width=w))
+multi_scale_light = (512,512)
 
 alb_transform = [
     # dict(
@@ -91,8 +81,7 @@ alb_transform = [
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    # dict(type='Resize', img_scale=[(size_max, size_max), (size_min, size_min)], multiscale_mode='range', keep_ratio=True),
-    dict(type='Resize', img_scale=multi_scale_list, multiscale_mode='value', keep_ratio=True),
+    dict(type='Resize', img_scale=multi_scale, multiscale_mode='value', keep_ratio=True),
     dict(
     type='Albu',
     transforms=alb_transform,
@@ -118,10 +107,10 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=multi_scale_list_light,
+        img_scale=multi_scale_light,
         flip=False,
         transforms=[
-            dict(type='Resize', img_scale=multi_scale_list_light, multiscale_mode='value', keep_ratio=True),
+            dict(type='Resize', img_scale=multi_scale_light, multiscale_mode='value', keep_ratio=True),
             dict(type='RandomFlip'),
             dict(type='Normalize', **img_norm_cfg),
             dict(type='ImageToTensor', keys=['img']),
@@ -132,7 +121,7 @@ test_pipeline = [
 classes = ('General trash', 'Paper', 'Paper pack', 'Metal', 'Glass', 'Plastic', 'Styrofoam', 'Plastic bag', 'Battery', 'Clothing')
 
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=4,
     workers_per_gpu=2,
     train=dict(
         type=dataset_type,

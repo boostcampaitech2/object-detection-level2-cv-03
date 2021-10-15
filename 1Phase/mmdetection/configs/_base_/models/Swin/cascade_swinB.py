@@ -1,8 +1,5 @@
 _base_ = [
-    # '../_base_/datasets/coco_detection.py',
-    # '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
-    '../../datasets/Pseudo_waste_dataset.py',
-    # '../../datasets/Swin_waste_dataset.py',
+    '../../datasets/Swin_waste_dataset.py',
     '../../schedules/waste_schedule.py', '../../Swin_waste_runtime.py',
 ]
 
@@ -15,7 +12,7 @@ model = dict(
         embed_dims=128,
         depths=[2, 2, 18, 2],
         num_heads=[4, 8, 16, 32],
-        window_size=12,
+        window_size=7,
         mlp_ratio=4,
         qkv_bias=True,
         qk_scale=None,
@@ -27,6 +24,7 @@ model = dict(
         with_cp=False,
         convert_weights=True,
         init_cfg=dict(type='Pretrained', checkpoint=pretrained)),
+        # init_cfg=dict(type='Pretrained', checkpoint=pretrained)),
     neck=dict(
         type='FPN',
         # in_channels=[96, 192, 384, 768],
@@ -199,6 +197,6 @@ model = dict(
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=dict(
-            score_thr=0.05,
+            score_thr=0.00,
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100)))
