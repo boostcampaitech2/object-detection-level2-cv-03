@@ -24,7 +24,7 @@ cascade_rcnn_swinB_anchor
 
 `cascade_rcnn_swinB_anchor.py`: 위 베이스 config 파일들을 통해 Swin Transformer를 backbone으로 활용하고 anchor scale을 추가한 custom config 파일
 
-___
+
 ## 모델 특징:
 
 `Swin Transformer`: 
@@ -37,7 +37,7 @@ Swin Transformer는 Transformer 구조를 컴퓨터 비전에 적용시키기 �
 
 `4 Convolution 1 FC`: 팀의 메인 모델과의 앙상블을 고려해 차이점을 주기 위해 bbox head로 4 convolution 1 fc head를 사용
 
-___
+
 ## 모델 성능:
 
 small object에 대한 mAP는 향상 되었지만 전체적인 mAP는 하락.
