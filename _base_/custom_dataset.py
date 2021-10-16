@@ -4,6 +4,7 @@ data_root = '/opt/ml/detection/dataset/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 
+# albumentations augmentation
 alb_transform = [
         dict(
         type='OneOf',
@@ -45,12 +46,6 @@ alb_transform = [
         dict(
         type='OneOf',
         transforms=[
-            # dict(
-            #     type='VerticalFlip',
-            #     p=1.0),
-            # dict(
-            #     type='HorizontalFlip',
-            #     p=1.0),
             dict(
                 type='ShiftScaleRotate',
                 p=1.0),
@@ -64,7 +59,11 @@ alb_transform = [
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', img_scale=(512, 512)),
+    # multi scale training
+    dict(type='Resize',
+        img_scale=[(512, 512), (1024, 1024)],
+        multiscale_mode='range',
+        keep_ratio=True),
     dict(
     type='Albu',
     transforms=alb_transform,
@@ -90,7 +89,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(512, 512),
+        img_scale=(1024, 1024),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
