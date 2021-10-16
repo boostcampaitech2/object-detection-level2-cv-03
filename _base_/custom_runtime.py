@@ -8,7 +8,8 @@ log_config = dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
                 project='P-stage2-detection',
-                name='r50-cascade-rcnn')
+                name='r50-cascade-rcnn',
+                entity='boostcampaitech2-object-detection-level2-cv-03')
         )
     ])
 # yapf:enable
