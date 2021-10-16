@@ -56,7 +56,7 @@
 
 ### 🏆 Final Score  
 <p align="center">
-   <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/leaderboard.png" width="700" height="90">
+   <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/leaderboard.png">
 </p>
 
 <br/>
