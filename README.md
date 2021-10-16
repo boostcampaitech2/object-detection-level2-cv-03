@@ -32,13 +32,13 @@
 - `임문경` &nbsp; EDA • Data Augmentation • Model Searching • Model Experiment  
 - `장석우` &nbsp; EDA • Modeling • Model Experiment • Ensemble 
 
-[image1]: ./_img/김지수.jpg
-[image2]: ./_img/박승찬.png
-[image3]: ./_img/박준수.jpg
-[image4]: ./_img/배지연.png
-[image5]: ./_img/이승현.png
-[image6]: ./_img/임문경.jpg
-[image7]: ./_img/장석우.jpg
+[image1]: https://kr.object.ncloudstorage.com/resume/boostcamp/00.png
+[image2]: https://kr.object.ncloudstorage.com/resume/boostcamp/01.png
+[image3]: https://kr.object.ncloudstorage.com/resume/boostcamp/02.png
+[image4]: https://kr.object.ncloudstorage.com/resume/boostcamp/03.png
+[image5]: https://kr.object.ncloudstorage.com/resume/boostcamp/04.png
+[image6]: https://kr.object.ncloudstorage.com/resume/boostcamp/05.png
+[image7]: https://kr.object.ncloudstorage.com/resume/boostcamp/06.png
 
 
 <br/>
