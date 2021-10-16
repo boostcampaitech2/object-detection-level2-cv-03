@@ -3,10 +3,10 @@
 # 1. Introduction  
 <br/>
 <p align="center">
-   <img src="" style="width:350px; height:70px;" />
+   <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/boostcamplogo.png" style="width:350px; height:70px;" />
 </p>
 <p align="center">
-   <img src="" style="width:800px; height:240px;" />
+   <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/boostcamplogo.png" style="width:800px; height:240px;" />
 </p>
 
 본 과정은 NAVER Connect 재단 주관으로 인공지능과 딥러닝 Production의 End-to-End를 명확히 학습하고 실무에서 구현할 수 있도록 훈련하는 약 5개월간의 교육과정입니다. 전체 과정은 이론과정(U-stage, 5주)와 실무기반 프로젝트(P-stage, 15주)로 구성되어 있으며, 두 번째 대회인 `Object detection`과제에 대한 **Level2 - 03조** 의 문제해결방법을 기록합니다.
@@ -96,29 +96,15 @@ More Detail : https://github.com/jinmang2/boostcamp_ai_tech_2/blob/main/assets/p
 
 ### Evaluation
 
-| Method | mAP |
-| --- | --- |
-| Synthetic Dataset + EfficientLite0 | 69.0 |
-| Synthetic Dataset + non-prtrained BEIT | 76.9 |
-| Synthetic Dataset + EfficientNet + Age-speicific | 76.9 |
-| Synthetic Dataset + NFNet (Pseudo Labeling + Weighted Sampling)| 78.5 |
-| Stacking BEIT + NFNet | 77.1 |
-
-```chart
-Method, mAP, K-fold
-cascade RCNN + swin, 0.677, 0.704
-CBNet, 0.584,
-UniverseNet, 0.594, 0.604
-YoloR, 0.611,
-Yolov5, 0.572,
-VFNet, 0.562, 
-HTC, 0.647,
-
-type : column
-title : Leaderboard mAP
-x.title: score
-y.title: method
-```
+| Method| mAP| K-fold|
+| --- | --- | --- |
+|cascade RCNN + swin| 0.677| 0.704|
+|CBNet|0.584|-|
+|UniverseNet|0.594|0.604|
+|YoloR|0.611|- |
+|Yolov5|0.572|-|
+|VFNet|0.562|-|
+|HTC|0.647|-|
 
 # 4. How to Use
 
