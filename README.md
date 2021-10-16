@@ -19,18 +19,18 @@
 
 김지수|박승찬|박준수|배지연|이승현|임문경|장석우
 :-:|:-:|:-:|:-:|:-:|:-:|:-:
-![image1][]|![image2][image2]|![image3][image3]|![image4][image4]|![image5][image5]|![image6][image6]|![image7][image7]
+![image1][image1]|![image2][image2]|![image3][image3]|![image4][image4]|![image5][image5]|![image6][image6]|![image7][image7]
 [Github](https://github.com/memesoo99)|[Github](https://github.com/ark10806)|[Github](https://github.com/JJONSOO)|[Github](https://github.com/jiiyeon)|[Github](https://github.com/lsh3163)|[Github](https://github.com/larcane97)|[Github](https://github.com/sw-jang)
 
 
 ### 🔅 Contribution  
-`김지수` &nbsp; Data Synthesis • Model Searching • Model Experiment  
-`박승찬` &nbsp; Custom Dataset • Pseudo Labeling • Model Searching • Model Experiment • Ensemble   
-`박준수` &nbsp; Data Synthesis • Model Searching • Model Experiment • Ensemble  
-`배지연` &nbsp; Model Evaluation • Document Recording  
-`이승현` &nbsp; EDA • Modeling • Model Experiment • Ensemble  
-`임문경` &nbsp; EDA • Data Augmentation • Model Searching • Model Experiment 
-`장석우` &nbsp; EDA • Modeling • Model Experiment • Ensemble 
+- `김지수` &nbsp; Data Synthesis • Model Searching • Model Experiment  
+- `박승찬` &nbsp; Custom Dataset • Pseudo Labeling • Model Searching • Model Experiment • Ensemble   
+- `박준수` &nbsp; Data Synthesis • Model Searching • Model Experiment • Ensemble  
+- `배지연` &nbsp; Model Evaluation • Document Recording  
+- `이승현` &nbsp; EDA • Modeling • Model Experiment • Ensemble
+- `임문경` &nbsp; EDA • Data Augmentation • Model Searching • Model Experiment  
+- `장석우` &nbsp; EDA • Modeling • Model Experiment • Ensemble 
 
 [image1]: ./_img/김지수.jpg
 [image2]: ./_img/박승찬.png
@@ -56,7 +56,7 @@
 
 ### 🏆 Final Score  
 <p align="center">
-   <img src="" width="700" height="90">
+   <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/leaderboard.png" width="700" height="90">
 </p>
 
 <br/>
@@ -71,11 +71,11 @@
 
 &nbsp; &nbsp; → 주요 논점을 해결하는 방법론을 제시하고 실험결과를 공유하며 토론을 반복했습니다   
 
-[process]: ./_img/process.png
+[process]: https://kr.object.ncloudstorage.com/resume/boostcamp/pipeline.png
 <br/>
 
 ### Checklist
-More Detail : https://github.com/jinmang2/boostcamp_ai_tech_2/blob/main/assets/ppt/palettai.pdf
+More Detail : https://kr.object.ncloudstorage.com/resume/boostcamp/CV3%EC%A1%B0%20%EB%B0%9C%ED%91%9C.pdf
 - [x] Test Time Augmentation
 - [x] Ensemble(Universenet, Swin, YoloR, Yolov5 등)
 - [x] Augmentation(background patches, cutmix)
