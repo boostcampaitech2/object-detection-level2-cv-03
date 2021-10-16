@@ -6,7 +6,7 @@
    <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/boostcamplogo.png" style="width:350px; height:70px;" />
 </p>
 <p align="center">
-   <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/boostcamplogo.png" style="width:800px; height:240px;" />
+   <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/boostcamplogo2.png" style="width:800px; height:240px;" />
 </p>
 
 본 과정은 NAVER Connect 재단 주관으로 인공지능과 딥러닝 Production의 End-to-End를 명확히 학습하고 실무에서 구현할 수 있도록 훈련하는 약 5개월간의 교육과정입니다. 전체 과정은 이론과정(U-stage, 5주)와 실무기반 프로젝트(P-stage, 15주)로 구성되어 있으며, 두 번째 대회인 `Object detection`과제에 대한 **Level2 - 03조** 의 문제해결방법을 기록합니다.
@@ -20,7 +20,7 @@
 김지수|박승찬|박준수|배지연|이승현|임문경|장석우
 :-:|:-:|:-:|:-:|:-:|:-:|:-:
 ![image1][]|![image2][image2]|![image3][image3]|![image4][image4]|![image5][image5]|![image6][image6]|![image7][image7]
-[Github](https://github.com/memesoo99)|[Github](https://github.com/vgptnv)|[Github](https://github.com/jiiyeon)|[Github](https://github.com/jiiyeon)|[Github](https://github.com/lsh3163)|[Github](https://github.com/larcane97)|[Github](https://github.com/jinmang2)
+[Github](https://github.com/memesoo99)|[Github](https://github.com/ark10806)|[Github](https://github.com/JJONSOO)|[Github](https://github.com/jiiyeon)|[Github](https://github.com/lsh3163)|[Github](https://github.com/larcane97)|[Github](https://github.com/sw-jang)
 
 
 ### 🔅 Contribution  
@@ -45,19 +45,14 @@
 
 # 2. Project Outline  
 
-![competition_title](./_img/competition_title.png)
+![competition_title](https://kr.object.ncloudstorage.com/resume/boostcamp/competition.png)
 
-<p align="center">
-   <img src="./_img/mask_sample.png" width="300" height="300">
-   <img src="./_img/class.png" width="300" height="300">
-</p>
-
-- Task : Image Classification
-- Date : 2021.08.22 - 2021.09.02 (2 weeks)
+- Task : Object detection
+- Date : 2021.09.27 - 2021.10.15 (3 weeks)
 - Description : 쓰레기 사진을 입력받아서 `일반 쓰레기, 플라스틱, 종이, 유리 등`를 추측하여 `10개의 class`로 분류하고 박스의 영역을 구합니다.   
 - Image Resolution : (1024 x 1024)
-- Train : 18,900
-- Test : 6,300
+- Train : 4,833
+- Test : 4,871
 
 ### 🏆 Final Score  
 <p align="center">
