@@ -13,8 +13,9 @@ This repo contains the **2nd solutions** on **BoostCamp AI_Tech** (2nd term) obj
 ```
 `swinB_cascade.py`  
 : It trains model on default dataset
-- mAP50 0.703
-- trains on a default dataset (waste_coco: imsize is 1024x1024)
+- mAP50 0.677 (single model)
+- mAP50 0.703 (k-fold CV ensembled)
+- trains on a default dataset
 - uses multi-scaled images [512 ~ 1024]
 - default anchor ratios
 - and default settings  
@@ -65,3 +66,8 @@ tools/dist_train.sh [path to swin*_cascade*.py] [number of GPUs]
 <img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137625208-37fd84a5-fccb-42cb-9947-1660082fcd9e.png">  
 [네이버 커넥트재단 - 재활용 쓰레기 데이터셋 / CC BY 2.0]  
 - The criteria for small and medium of mmdetection are 0\~32 and 32\~96px, respectively.
+
+
+## Performance in Customized model & dataset
+<img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137626551-32ef2425-62b1-4604-af3a-ca763f270a91.png">  
+- Noticeable performance improvement was found in mAP_small.
