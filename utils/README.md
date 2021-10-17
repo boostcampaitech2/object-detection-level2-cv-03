@@ -20,3 +20,7 @@
 ## /notebook
 - .ipynb기반의 여러 파일들이 들어있는 폴더
 - inference, visualization, ensemble 등의 파일 존재
+
+## /data_systhesis
+- bbox를 category별로 cutout해서 새로운 합성 data를 만드는 코드
+- 흰 캔버스에 합성하는 버전과 배경패치에 이어 붙이는 버전 두가지가 있으나 배경패치 data는 해당 레포에서 제공하지 않는다.
