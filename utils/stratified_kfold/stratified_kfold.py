@@ -1,3 +1,8 @@
+#!pip install scipy
+#!pip3 uninstall scikit-learn --yes
+#!pip3 install scikit-learn==0.22
+#!pip install iterative-stratification
+
 from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 from operator import add
 import numpy as np
