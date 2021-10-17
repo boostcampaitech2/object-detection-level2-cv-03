@@ -11,14 +11,16 @@ This repo contains the **2nd solutions** on **BoostCamp AI_Tech** (2nd term) obj
     │       └── swinS_cascade_for_smallObjs.py
     └── schedules
 ```
-`swinB_cascade.py`: It trains model on default dataset
+`swinB_cascade.py`  
+: It trains model on default dataset
 - mAP50 0.703
 - trains on a default dataset (waste_coco: imsize is 1024x1024)
 - uses multi-scaled images [512 ~ 1024]
 - default anchor ratios
 - and default settings  
 
-`swinS_cascade_for_smallObjs.py`: Focus on the small and medium objects.
+`swinS_cascade_for_smallObjs.py`  
+: Focused on the small and medium objects.
 - trains on a small & medium biased dataset
 - uses expanded multi scales [800 ~ 1408]
 - Anchor_ratios and anchor_scales focused on small and medium objects  
