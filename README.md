@@ -109,9 +109,12 @@ More Detail : https://kr.object.ncloudstorage.com/resume/boostcamp/CV3%EC%A1%B0%
 
 ```
 .
-├──/dataset/train
-├──/dataset/test
-├──image-classification-level1-08
+├──/dataset
+|   ├── train.json
+|   ├── test.json
+|   ├── /train
+|   ├── /test
+├──/object-detection-level2-cv-03
 │   ├── model1
 │         ├── config.py
 │         └── readme.md
