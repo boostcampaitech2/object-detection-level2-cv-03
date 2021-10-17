@@ -1,7 +1,7 @@
 ###########################################################################
 #아래 두 부분만 수정하시면 됩니다.
 ###########################################################################
-fold_num = 2
+fold_num = 1
 data_root = '/opt/ml/detection/dataset/'
 
 
@@ -21,10 +21,6 @@ multi_scale = [(x,x) for x in range(size_min, size_max+1, 32)]
 multi_scale_light = (512,512)
 
 alb_transform = [
-    # dict(
-    #     type='OneOf',
-    #     transforms=multi_scale_dict,
-    #     p=1.0),
     dict(
         type='VerticalFlip',
         p=0.15),
@@ -71,12 +67,6 @@ alb_transform = [
     dict(
         type='OneOf',
         transforms=[
-            # dict(
-            #     type='VerticalFlip',
-            #     p=1.0),
-            # dict(
-            #     type='HorizontalFlip',
-            #     p=1.0),
             dict(
                 type='ShiftScaleRotate',
                 p=1.0),
@@ -232,7 +222,6 @@ model = dict(
         init_cfg=dict(type='Pretrained', checkpoint=pretrained)),
     neck=dict(
         type='FPN',
-        # in_channels=[96, 192, 384, 768],
         in_channels=[128, 128*2, 128*4, 128*8],
         out_channels=256,
         num_outs=5),
@@ -243,8 +232,6 @@ model = dict(
         anchor_generator=dict(
             type='AnchorGenerator',
             scales=[8],
-            # ratios=[0.47, 0.70, 1.00, 1.20, 2.0],
-            # ratios=[0.47, 0.70, 1.00, 1.35, 1.70, 2.4],
             ratios=[0.5, 1.0, 2.0],
             strides=[4, 8, 16, 32, 64]),
         bbox_coder=dict(
@@ -266,12 +253,10 @@ model = dict(
         bbox_head=[
             dict(
                 type='Shared2FCBBoxHead',
-                # type='Shared4Conv1FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
-                # num_classes=80,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
@@ -285,12 +270,10 @@ model = dict(
                                loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
-                # type='Shared4Conv1FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
-                # num_classes=80,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
@@ -304,12 +287,10 @@ model = dict(
                                loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
-                # type='Shared4Conv1FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
-                # num_classes=80,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
