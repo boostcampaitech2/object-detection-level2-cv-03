@@ -1,6 +1,5 @@
 This repo contains the **2nd solutions** on **BoostCamp AI_Tech** (2nd term) object detection competetion.  
 
-# object-detection-level2-cv-03
 ## Contents
 ```
 .
