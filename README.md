@@ -40,4 +40,5 @@ CBNetV2는 backbone 에서 특징을 뽑는것이 object detection 에서 매우
 ## 모델 성능:
 
 Universenet101 LB score: 0.594 , k-fold LB scre : 0.604
+
 CBNetV2 LB score : 0.562
