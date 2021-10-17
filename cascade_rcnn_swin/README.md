@@ -70,4 +70,4 @@ tools/dist_train.sh [path to swin*_cascade*.py] [number of GPUs]
 
 ## Performance on Customized model & dataset
 <img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137626551-32ef2425-62b1-4604-af3a-ca763f270a91.png">  
-- Noticeable performance improvement was found in s_AP
+- Noticeable performance improvement was found in mAP_small.
