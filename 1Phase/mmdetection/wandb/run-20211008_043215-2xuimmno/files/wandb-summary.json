@@ -1,1 +1,0 @@
-{"train/loss_cls": 0.0, "train/loss_bbox": 0.0, "train/loss_obj": 421.7693267822266, "train/loss": 421.7693267822266, "train/grad_norm": 9138.199395751953, "learning_rate": 5.942857142857144e-05, "momentum": 0.9, "_runtime": 259, "_timestamp": 1633667794, "_step": 246, "_wandb": {"runtime": 270}}
