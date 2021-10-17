@@ -15,7 +15,7 @@ This repo contains the **2nd solutions** on **BoostCamp AI_Tech** (2nd term) obj
 : It trains model on default dataset
 - mAP50 0.677 (single model)
 - mAP50 0.703 (k-fold CV ensembled)
-- trains on a default dataset (waste_coco: imsize is 1024x1024)
+- trains on a default dataset
 - uses multi-scaled images [512 ~ 1024]
 - default anchor ratios
 - and default settings  
