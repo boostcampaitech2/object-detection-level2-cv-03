@@ -22,10 +22,6 @@ multi_scale = [(x,x) for x in range(size_min, size_max+1, 32)]
 multi_scale_light = [(size_min,size_min), (912,912), (1024,1024), (1312, 1312) ]
 
 alb_transform = [
-    # dict(
-    #     type='OneOf',
-    #     transforms=multi_scale_dict,
-    #     p=1.0),
     dict(
         type='VerticalFlip',
         p=0.15),
@@ -72,12 +68,6 @@ alb_transform = [
     dict(
         type='OneOf',
         transforms=[
-            # dict(
-            #     type='VerticalFlip',
-            #     p=1.0),
-            # dict(
-            #     type='HorizontalFlip',
-            #     p=1.0),
             dict(
                 type='ShiftScaleRotate',
                 p=1.0),
@@ -137,7 +127,6 @@ data = dict(
         type=dataset_type,
         classes=classes,
         ann_file=data_root + 'sm_train1.json',
-        # ann_file=data_root + f'cv_train{fold_num}.json',
         img_prefix=data_root,
         pipeline=train_pipeline),
     
@@ -163,31 +152,17 @@ print('\n'*10)
 ###########################################################################
 #Schedule
 ###########################################################################
-lr = 4e-3  # max learning rate
+lr = 1e-4 /2  # max learning rate
 optimizer = dict(type='AdamW', lr=lr, weight_decay=0.01)
-# optimizer = dict(type='SGD', lr=lr, weight_decay=0.0005)
-# optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=10, norm_type=2))
 lr_config = dict(
     policy='CosineAnnealing',
     warmup='linear',
-    warmup_iters=50,
+    warmup_iters=300,
     warmup_ratio=1.0 / 10,
-    min_lr_ratio=9e-6)
+    min_lr_ratio=7e-6)
 # runtime settings
-total_epochs = 160
-
-# lr = 1e-4 /2  # max learning rate
-# optimizer = dict(type='AdamW', lr=lr, weight_decay=0.01)
-# optimizer_config = dict(grad_clip=dict(max_norm=10, norm_type=2))
-# lr_config = dict(
-#     policy='CosineAnnealing',
-#     warmup='linear',
-#     warmup_iters=300,
-#     warmup_ratio=1.0 / 10,
-#     min_lr_ratio=7e-6)
-# # runtime settings
-# total_epochs = 40
+total_epochs = 40
 
 
 ###########################################################################
@@ -197,7 +172,7 @@ total_epochs = 160
 expr_name = f'swinS{size_min}{size_max}_fold{fold_num}'
 dist_params = dict(backend='nccl')
 
-runner = dict(type='EpochBasedRunner', max_epochs=160)
+runner = dict(type='EpochBasedRunner', max_epochs=40)
 checkpoint_config = dict(interval=5)
 log_config = dict(
     interval=10,
@@ -209,7 +184,6 @@ log_config = dict(
                 project='P-stage2-detection-Augs',
                 name=expr_name,
                 entity='ark10806'
-                # entity='boostcampaitech2-object-detection-level2-cv-03'
         ))
     ])
 custom_hooks = [dict(type='NumClassCheckHook')]
@@ -260,11 +234,7 @@ model = dict(
         anchor_generator=dict(
             type='AnchorGenerator',
             scales=[5, 8],
-            # ratios=[0.47, 0.70, 1.00, 1.20, 2.0],
-            # ratios=[0.47, 0.70, 1.00, 1.35, 1.70, 2.4],
-            # ratios=[0.4, 0.6, 1.5, 2.5], for s_AP
             ratios=[0.45, 0.75, 1.23, 2.0],
-            # ratios=[0.5, 1.0, 2.0],
             strides=[4, 8, 16, 32, 64]),
         bbox_coder=dict(
             type='DeltaXYWHBBoxCoder',
@@ -285,12 +255,10 @@ model = dict(
         bbox_head=[
             dict(
                 type='Shared2FCBBoxHead',
-                # type='Shared4Conv1FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
-                # num_classes=80,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
@@ -303,12 +271,10 @@ model = dict(
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
-                # type='Shared4Conv1FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
-                # num_classes=80,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
@@ -321,12 +287,10 @@ model = dict(
                 loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
-                # type='Shared4Conv1FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
                 num_classes=10,
-                # num_classes=80,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
