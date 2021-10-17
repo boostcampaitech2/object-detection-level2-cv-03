@@ -1,4 +1,4 @@
-This repo contains the 2nd solutions on BoostCamp AI_Tech (2nd term) object detection competetion.  
+This repo contains the **2nd solutions** on **BoostCamp AI_Tech** (2nd term) object detection competetion.  
 
 # object-detection-level2-cv-03
 ## Contents
@@ -23,6 +23,16 @@ This repo contains the 2nd solutions on BoostCamp AI_Tech (2nd term) object dete
 - trains on a small & medium biased dataset
 - uses expanded multi scales [800 ~ 1408]
 - Anchor_ratios and anchor_scales focused on small and medium objects  
+
+**Anchors**  
+default anchors  
+<img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137625929-d0c31000-d794-4f34-b5e6-ec69692242fc.jpg">  
+- the default anchor ratios are [0.5, 1.0, 2.0]  
+
+customized anchors  
+<img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137625776-677e576f-6e52-45cb-af6a-c9a86ad79dc0.jpg">  
+- the customized anchor ratios are [0.4, 0.7, 1.23, 2.0]  
+  
 
 
 ## Requirements
