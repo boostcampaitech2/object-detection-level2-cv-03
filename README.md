@@ -54,6 +54,9 @@
 - Train : 4,833
 - Test : 4,871
 
+![objecteda](https://kr.object.ncloudstorage.com/resume/boostcamp/objecteda.png)
+
+
 ### 🏆 Final Score  
 <p align="center">
    <img src="https://kr.object.ncloudstorage.com/resume/boostcamp/leaderboard.png">
