@@ -19,11 +19,11 @@ classes = {"General_trash":0, "Paper":1, "Paper_pack":2, "Metal":3, "Glass":4,
 classes_invert = {0:"General_trash", 1:"Paper", 2:"Paper_pack", 3:"Metal", 4:"Glass", 
            5:"Plastic", 6:"Styrofoam", 7:"Plastic_bag", 8:"Battery", 9:"Clothing"}
 ```
-모델 config의 class에 맞게 수정필요
+모델 config의 class에 맞게 수정 필요
 <br>
 <br>
 
-2. cㅐllage.py
+2. collage.py
 
 White canvas, Background pathch canvas 2가지 버전 있음.(BG patch data는 해당 레포에서 제공X)
 
