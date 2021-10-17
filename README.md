@@ -115,6 +115,7 @@ More Detail : https://kr.object.ncloudstorage.com/resume/boostcamp/CV3%EC%A1%B0%
 |   ├── /train
 |   ├── /test
 ├──/object-detection-level2-cv-03
+│   ├── utils
 │   ├── model1
 │         ├── config.py
 │         └── readme.md
@@ -124,5 +125,6 @@ More Detail : https://kr.object.ncloudstorage.com/resume/boostcamp/CV3%EC%A1%B0%
 ```
 
 - `model`안에는 각각 **config.py** •  **readme.md**가 들어있습니다  
+- `utils` 에는 앙상블, stratified k-fold, cutmix, 콜라주 기법 등 자체 구현한 util 모듈들이 포함되어 있습니다.
 - 사용자는 전체 코드를 내려받은 후 설명서에 따라 옵션을 지정하여 개별 라이브러리의 모델을 활용할 수 있습니다
 - 각 라이브러리의 구성요소는 `readme.md`에서 확인할 수 있습니다  
