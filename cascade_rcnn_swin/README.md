@@ -64,4 +64,4 @@ tools/dist_train.sh [path to swin*_cascade*.py] [number of GPUs]
 **small & medium biased dataset**  
 <img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137625208-37fd84a5-fccb-42cb-9947-1660082fcd9e.png">  
 [네이버 커넥트재단 - 재활용 쓰레기 데이터셋 / CC BY 2.0]  
-- The criteria for small and medium of mmdetection are 0~32 and 32~96px, respectively.
+- The criteria for small and medium of mmdetection are 0\~32 and 32\~96px, respectively.
