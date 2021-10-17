@@ -17,9 +17,6 @@
 - mm_inference.ipynb : 모델 inference 후 fiftyone을 이용한 시각화까지 포함된 파일
 - submission_visualization.ipynb : 주어진 submission.csv를 기반으로 fiftyone을 통한 시각화를 해주는 파일
 
-## /model
-- mmdetection기반의 모델 config가 들어있는 폴더
-
 ## /notebook
 - .ipynb기반의 여러 파일들이 들어있는 폴더
 - inference, visualization, ensemble 등의 파일 존재
