@@ -68,6 +68,6 @@ tools/dist_train.sh [path to swin*_cascade*.py] [number of GPUs]
 - The criteria for small and medium of mmdetection are 0\~32 and 32\~96px, respectively.
 
 
-## Performance on Customized model & dataset
+## Performance on a Customized model & dataset
 <img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137626551-32ef2425-62b1-4604-af3a-ca763f270a91.png">  
 - Noticeable performance improvement was found in mAP_small.
