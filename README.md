@@ -3,7 +3,8 @@
 </h1>
 
 ```bash
-Universenet├── _base_
+Universenet
+    ├── _base_
     ├── custom_dataset.py
     ├── custom_runtime.py
     ├── custom_schedule.py
