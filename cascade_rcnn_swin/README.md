@@ -32,7 +32,7 @@ default anchors
 
 customized anchors  
 <img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137625776-677e576f-6e52-45cb-af6a-c9a86ad79dc0.jpg">  
-- the customized anchor ratios are [0.4, 0.7, 1.23, 2.0]  
+- the customized anchor ratios are [0.40, 0.70, 1.23, 2.00]  
   
 
 
