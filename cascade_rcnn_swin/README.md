@@ -56,7 +56,7 @@ On multiple GPUs
 ```
 tools/dist_train.sh [path to swin*_cascade*.py] [number of GPUs]  
 ```  
-## Dataset
+## Datasets
 **Default datatset**  
 <img width="512" alt="image" src="https://user-images.githubusercontent.com/30382262/137625618-39656c65-ed13-42f0-8659-a3d7cd45f60c.jpg">  
 [네이버 커넥트재단 - 재활용 쓰레기 데이터셋 / CC BY 2.0]
